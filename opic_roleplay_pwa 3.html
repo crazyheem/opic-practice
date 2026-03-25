@@ -1,0 +1,930 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no">
+
+<!-- ── iOS PWA 필수 ── -->
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="OPIc 연습">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#0F1623">
+<meta name="description" content="OPIc IM3→IH 롤플레이 실전 연습 앱">
+<meta name="format-detection" content="telephone=no">
+
+<!-- ── 아이콘 / 스플래시 (Canvas로 동적 생성) ── -->
+<link id="apple-touch-icon"     rel="apple-touch-icon" sizes="180x180">
+<link id="apple-touch-icon-152" rel="apple-touch-icon" sizes="152x152">
+<link id="apple-touch-icon-120" rel="apple-touch-icon" sizes="120x120">
+<link id="splash-2796" rel="apple-touch-startup-image" media="(device-width:430px)and(device-height:932px)and(-webkit-device-pixel-ratio:3)">
+<link id="splash-2556" rel="apple-touch-startup-image" media="(device-width:393px)and(device-height:852px)and(-webkit-device-pixel-ratio:3)">
+<link id="splash-2532" rel="apple-touch-startup-image" media="(device-width:390px)and(device-height:844px)and(-webkit-device-pixel-ratio:3)">
+<link id="splash-2436" rel="apple-touch-startup-image" media="(device-width:375px)and(device-height:812px)and(-webkit-device-pixel-ratio:3)">
+<link id="splash-1334" rel="apple-touch-startup-image" media="(device-width:375px)and(device-height:667px)and(-webkit-device-pixel-ratio:2)">
+
+<title>OPIc 롤플레이 연습</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&family=DM+Mono:ital@0;1&family=Sora:wght@600;700;800&display=swap');
+
+  :root {
+    --bg: #0F1623;
+    --surface: #161F30;
+    --surface2: #1E2D45;
+    --border: #2A3D58;
+    --accent: #3B82F6;
+    --accent2: #60A5FA;
+    --green: #10B981;
+    --amber: #F59E0B;
+    --red: #EF4444;
+    --text: #E2E8F0;
+    --text2: #94A3B8;
+    --text3: #64748B;
+    /* iOS Safe Area */
+    --sat: env(safe-area-inset-top, 0px);
+    --sab: env(safe-area-inset-bottom, 0px);
+    --sal: env(safe-area-inset-left, 0px);
+    --sar: env(safe-area-inset-right, 0px);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+
+  html, body {
+    height: 100%; height: -webkit-fill-available;
+    overflow: hidden;
+    font-family: 'Noto Sans KR', -apple-system, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* ═══════════════════════════════
+     SCREENS (SPA navigation)
+  ═══════════════════════════════ */
+  .screen { display: none; flex-direction: column; height: 100%; height: -webkit-fill-available; }
+  .screen.active { display: flex; }
+
+  /* ═══════════════════════════════
+     SCREEN 1: SCENARIO LIST
+  ═══════════════════════════════ */
+  .list-header {
+    background: linear-gradient(160deg, #1a2f50 0%, #0f1e35 100%);
+    padding: calc(var(--sat) + 16px) 20px 16px;
+    border-bottom: 1px solid var(--border);
+    flex-shrink: 0;
+  }
+  .list-header-top {
+    display: flex; align-items: center; gap: 12px; margin-bottom: 12px;
+  }
+  .app-icon {
+    width: 42px; height: 42px; border-radius: 12px;
+    background: linear-gradient(135deg, var(--accent), #1D4ED8);
+    display: flex; align-items: center; justify-content: center; font-size: 20px;
+    flex-shrink: 0;
+  }
+  .app-title { font-family: 'Sora', sans-serif; font-size: 18px; font-weight: 700; color: #fff; }
+  .app-sub { font-size: 12px; color: var(--text3); margin-top: 2px; }
+  .level-badge {
+    margin-left: auto; background: rgba(59,130,246,0.15);
+    border: 1px solid rgba(59,130,246,0.35); color: var(--accent2);
+    font-size: 11px; font-weight: 700; padding: 4px 10px; border-radius: 20px;
+  }
+  .list-hint {
+    font-size: 12px; color: var(--text3); line-height: 1.5;
+    background: rgba(255,255,255,0.03); border-radius: 8px; padding: 8px 12px;
+  }
+
+  .list-scroll {
+    flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch;
+    padding: 12px 16px calc(var(--sab) + 20px);
+  }
+
+  .category-label {
+    font-size: 10px; font-weight: 700; letter-spacing: 1.2px; text-transform: uppercase;
+    color: var(--text3); padding: 16px 4px 8px; display: flex; align-items: center; gap: 6px;
+  }
+  .category-label span { font-size: 14px; }
+
+  .scenario-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px; padding: 14px 16px;
+    margin-bottom: 10px; cursor: pointer;
+    display: flex; align-items: center; gap: 12px;
+    transition: all 0.15s; -webkit-transition: all 0.15s;
+    -webkit-user-select: none; user-select: none;
+    active-transform: scale(0.98);
+  }
+  .scenario-card:active { transform: scale(0.97); background: var(--surface2); }
+  .s-emoji { font-size: 26px; flex-shrink: 0; width: 42px; text-align: center; }
+  .s-info { flex: 1; min-width: 0; }
+  .s-title { font-size: 14px; font-weight: 600; color: var(--text); }
+  .s-desc { font-size: 12px; color: var(--text3); margin-top: 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .s-chips { display: flex; gap: 5px; margin-top: 6px; flex-wrap: wrap; }
+  .s-chip {
+    font-size: 10px; font-weight: 600; padding: 2px 7px; border-radius: 5px;
+    background: rgba(59,130,246,0.1); color: var(--accent2);
+    border: 1px solid rgba(59,130,246,0.2);
+  }
+  .s-arrow { color: var(--text3); font-size: 16px; flex-shrink: 0; }
+
+  /* ═══════════════════════════════
+     SCREEN 2: PRACTICE
+  ═══════════════════════════════ */
+  .practice-nav {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: calc(var(--sat) + 12px) 16px 10px;
+    flex-shrink: 0;
+  }
+  .nav-top { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+  .back-btn {
+    width: 34px; height: 34px; border-radius: 10px;
+    background: var(--surface2); border: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 16px; cursor: pointer; flex-shrink: 0;
+    -webkit-user-select: none;
+  }
+  .back-btn:active { opacity: 0.7; }
+  .nav-title { font-family: 'Sora', sans-serif; font-size: 15px; font-weight: 700; color: #fff; flex: 1; min-width: 0; }
+  .nav-title-text { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+  .step-tabs { display: flex; gap: 6px; }
+  .step-tab {
+    flex: 1; padding: 7px 4px; border-radius: 8px; border: none; cursor: pointer;
+    font-size: 11px; font-weight: 600; text-align: center;
+    background: var(--surface2); color: var(--text3);
+    border: 1px solid var(--border); transition: all 0.15s;
+    -webkit-user-select: none; line-height: 1.3;
+  }
+  .step-tab.active { background: var(--accent); color: #fff; border-color: var(--accent); }
+  .step-tab:active { opacity: 0.8; }
+
+  .progress-bar { height: 3px; background: var(--border); margin-top: 8px; border-radius: 2px; overflow: hidden; }
+  .progress-fill { height: 100%; background: linear-gradient(90deg, var(--accent), #60A5FA); transition: width 0.4s; border-radius: 2px; }
+
+  /* Chat */
+  .chat-scroll {
+    flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch;
+    padding: 14px 14px 8px;
+    display: flex; flex-direction: column; gap: 14px;
+  }
+
+  .msg { display: flex; gap: 10px; align-items: flex-start; animation: fadeUp 0.2s ease; }
+  @keyframes fadeUp { from { opacity:0; transform:translateY(6px); } to { opacity:1; transform:translateY(0); } }
+
+  .msg-avatar {
+    width: 32px; height: 32px; border-radius: 9px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 15px; flex-shrink: 0; margin-top: 2px;
+  }
+  .av-examiner { background: linear-gradient(135deg, #6366F1, #4F46E5); }
+  .av-you      { background: linear-gradient(135deg, #10B981, #059669); }
+  .av-hint     { background: linear-gradient(135deg, #F59E0B, #D97706); }
+  .av-feedback { background: linear-gradient(135deg, #8B5CF6, #7C3AED); }
+  .av-done     { background: linear-gradient(135deg, #F59E0B, #D97706); }
+
+  .msg-body { flex: 1; min-width: 0; }
+  .msg-label {
+    font-size: 10px; font-weight: 700; letter-spacing: 0.5px;
+    text-transform: uppercase; margin-bottom: 4px;
+  }
+  .lbl-examiner { color: #818CF8; }
+  .lbl-you      { color: #34D399; }
+  .lbl-hint     { color: #FCD34D; }
+  .lbl-feedback { color: #C4B5FD; }
+  .lbl-done     { color: #FCD34D; }
+
+  .bubble {
+    padding: 11px 14px; border-radius: 12px;
+    font-size: 14px; line-height: 1.7; word-break: keep-all;
+  }
+  .bubble.examiner { background: var(--surface2); border: 1px solid var(--border); color: var(--text); }
+  .bubble.hint     { background: rgba(245,158,11,0.08); border: 1px solid rgba(245,158,11,0.2); color: #FDE68A; font-size: 13px; }
+  .bubble.your-answer { background: rgba(16,185,129,0.08); border: 1px solid rgba(16,185,129,0.2); color: #A7F3D0; font-size: 13px; white-space: pre-wrap; font-family: 'DM Mono', monospace; }
+  .bubble.feedback { background: rgba(139,92,246,0.1); border: 1px solid rgba(139,92,246,0.25); color: #DDD6FE; font-size: 13px; }
+  .bubble.done     { background: rgba(245,158,11,0.1); border: 1px solid rgba(245,158,11,0.25); color: #FDE68A; font-size: 13px; }
+
+  .sample-toggle {
+    font-size: 12px; color: var(--text3); cursor: pointer;
+    display: inline-flex; align-items: center; gap: 4px;
+    margin-top: 8px; padding: 5px 0;
+    -webkit-user-select: none;
+  }
+  .sample-toggle:active { opacity: 0.7; }
+  .sample-box {
+    display: none; margin-top: 6px; padding: 11px 13px;
+    background: rgba(59,130,246,0.06); border: 1px solid rgba(59,130,246,0.15);
+    border-radius: 10px; font-size: 13px; color: #93C5FD; line-height: 1.75;
+    font-family: 'DM Mono', monospace; word-break: break-word;
+  }
+  .sample-box.show { display: block; }
+
+  /* Input area */
+  .input-area {
+    background: var(--surface);
+    border-top: 1px solid var(--border);
+    padding: 10px 14px calc(var(--sab) + 10px);
+    flex-shrink: 0;
+  }
+  .input-box {
+    background: var(--bg);
+    border: 1.5px solid var(--border);
+    border-radius: 12px; padding: 10px 14px;
+    margin-bottom: 8px; transition: border-color 0.2s;
+  }
+  .input-box:focus-within { border-color: var(--accent); }
+  .input-lbl { font-size: 10px; font-weight: 700; color: var(--text3); margin-bottom: 5px; letter-spacing: 0.3px; }
+  textarea {
+    width: 100%; background: transparent; border: none; outline: none;
+    color: var(--text); font-size: 15px; line-height: 1.6;
+    font-family: 'Noto Sans KR', -apple-system, sans-serif;
+    resize: none; min-height: 52px; max-height: 100px;
+    -webkit-appearance: none;
+  }
+  textarea::placeholder { color: var(--text3); }
+
+  .btn-row { display: flex; gap: 7px; }
+  .btn {
+    flex: 1; padding: 11px 8px; border-radius: 10px; border: none; cursor: pointer;
+    font-size: 12px; font-weight: 700; transition: all 0.15s;
+    display: flex; align-items: center; justify-content: center; gap: 4px;
+    -webkit-user-select: none; font-family: 'Noto Sans KR', sans-serif;
+    -webkit-appearance: none;
+  }
+  .btn:active { transform: scale(0.96); }
+  .btn-submit { background: var(--accent); color: #fff; }
+  .btn-hint   { background: rgba(245,158,11,0.15); color: #FCD34D; border: 1px solid rgba(245,158,11,0.3); }
+  .btn-sample { background: var(--surface2); color: var(--text2); border: 1px solid var(--border); }
+  .btn-next   { background: rgba(16,185,129,0.15); color: #6EE7B7; border: 1px solid rgba(16,185,129,0.3); }
+  .btn-reset  { background: rgba(239,68,68,0.12); color: #FCA5A5; border: 1px solid rgba(239,68,68,0.25); }
+
+  .btn-row-2 { display: flex; gap: 7px; margin-top: 7px; }
+
+  /* Situation card */
+  .situation-card {
+    background: rgba(59,130,246,0.06);
+    border: 1px solid rgba(59,130,246,0.15);
+    border-radius: 10px; padding: 10px 13px;
+    font-size: 12px; color: var(--text2); line-height: 1.6; word-break: keep-all;
+    margin-bottom: 6px;
+  }
+  .situation-card strong { color: var(--accent2); }
+
+  /* scrollbar */
+  ::-webkit-scrollbar { width: 4px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+</style>
+</head>
+<body>
+
+<!-- ══════════════════════════════════
+     SCREEN 1: SCENARIO LIST
+══════════════════════════════════ -->
+<div class="screen active" id="screen-list">
+  <div class="list-header">
+    <div class="list-header-top">
+      <div class="app-icon">🎭</div>
+      <div>
+        <div class="app-title">OPIc 롤플레이</div>
+        <div class="app-sub">IM3 → IH 실전 연습</div>
+      </div>
+      <div class="level-badge">IH 목표</div>
+    </div>
+    <div class="list-hint">💡 시나리오를 선택해 11번→12번→13번 3콤보를 연습하세요. 힌트와 모범답변을 참고하되, 꼭 내 말로 바꿔보세요!</div>
+  </div>
+
+  <div class="list-scroll">
+    <div class="category-label"><span>🛒</span> 쇼핑 / 서비스</div>
+    <div class="scenario-card" onclick="startScenario(0)">
+      <div class="s-emoji">🎬</div>
+      <div class="s-info">
+        <div class="s-title">영화관 예매 취소</div>
+        <div class="s-desc">환불 요청 + 대안 제시</div>
+        <div class="s-chips"><span class="s-chip">질문</span><span class="s-chip">문제설명</span><span class="s-chip">대안제시</span></div>
+      </div>
+      <div class="s-arrow">›</div>
+    </div>
+    <div class="scenario-card" onclick="startScenario(1)">
+      <div class="s-emoji">👗</div>
+      <div class="s-info">
+        <div class="s-title">옷 교환 요청</div>
+        <div class="s-desc">사이즈 문제 + 해결 협상</div>
+        <div class="s-chips"><span class="s-chip">질문</span><span class="s-chip">불만표현</span><span class="s-chip">협상</span></div>
+      </div>
+      <div class="s-arrow">›</div>
+    </div>
+    <div class="scenario-card" onclick="startScenario(2)">
+      <div class="s-emoji">🏋️</div>
+      <div class="s-info">
+        <div class="s-title">헬스장 등록 문의</div>
+        <div class="s-desc">시설 문의 + 가격 협상</div>
+        <div class="s-chips"><span class="s-chip">질문</span><span class="s-chip">협상</span><span class="s-chip">대안</span></div>
+      </div>
+      <div class="s-arrow">›</div>
+    </div>
+
+    <div class="category-label"><span>✈️</span> 여행 / 숙박</div>
+    <div class="scenario-card" onclick="startScenario(3)">
+      <div class="s-emoji">🏨</div>
+      <div class="s-info">
+        <div class="s-title">호텔 예약 문의</div>
+        <div class="s-desc">시설 질문 + 예약 변경</div>
+        <div class="s-chips"><span class="s-chip">질문</span><span class="s-chip">변경요청</span><span class="s-chip">업그레이드</span></div>
+      </div>
+      <div class="s-arrow">›</div>
+    </div>
+    <div class="scenario-card" onclick="startScenario(4)">
+      <div class="s-emoji">✈️</div>
+      <div class="s-info">
+        <div class="s-title">항공편 지연 문제</div>
+        <div class="s-desc">불만 접수 + 보상 요청</div>
+        <div class="s-chips"><span class="s-chip">상황파악</span><span class="s-chip">불만</span><span class="s-chip">보상요청</span></div>
+      </div>
+      <div class="s-arrow">›</div>
+    </div>
+
+    <div class="category-label"><span>📞</span> 전화 / 예약</div>
+    <div class="scenario-card" onclick="startScenario(5)">
+      <div class="s-emoji">🍽️</div>
+      <div class="s-info">
+        <div class="s-title">식당 예약 취소</div>
+        <div class="s-desc">약속 변경 + 재예약</div>
+        <div class="s-chips"><span class="s-chip">확인문의</span><span class="s-chip">취소요청</span><span class="s-chip">재예약</span></div>
+      </div>
+      <div class="s-arrow">›</div>
+    </div>
+    <div class="scenario-card" onclick="startScenario(6)">
+      <div class="s-emoji">📚</div>
+      <div class="s-info">
+        <div class="s-title">도서관 분실물</div>
+        <div class="s-desc">물건 찾기 + 상황 설명</div>
+        <div class="s-chips"><span class="s-chip">신고</span><span class="s-chip">묘사</span><span class="s-chip">대안</span></div>
+      </div>
+      <div class="s-arrow">›</div>
+    </div>
+
+    <div class="category-label"><span>🏪</span> 기타</div>
+    <div class="scenario-card" onclick="startScenario(7)">
+      <div class="s-emoji">☕</div>
+      <div class="s-info">
+        <div class="s-title">카페 주문 오류</div>
+        <div class="s-desc">오주문 + 정중한 해결 요청</div>
+        <div class="s-chips"><span class="s-chip">문제제기</span><span class="s-chip">불만표현</span><span class="s-chip">보상요청</span></div>
+      </div>
+      <div class="s-arrow">›</div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════
+     SCREEN 2: PRACTICE
+══════════════════════════════════ -->
+<div class="screen" id="screen-practice">
+  <div class="practice-nav">
+    <div class="nav-top">
+      <div class="back-btn" onclick="goBack()">‹</div>
+      <div class="nav-title"><div class="nav-title-text" id="navTitle">영화관 예매 취소</div></div>
+    </div>
+    <div class="step-tabs" id="stepTabs"></div>
+    <div class="progress-bar"><div class="progress-fill" id="progressFill" style="width:0%"></div></div>
+  </div>
+
+  <div class="chat-scroll" id="chatScroll"></div>
+
+  <div class="input-area">
+    <div class="input-box">
+      <div class="input-lbl">✏️ 영어로 답변 입력 (엔터로 제출)</div>
+      <textarea id="userInput" placeholder="Type your answer in English..." rows="2"></textarea>
+    </div>
+    <div class="btn-row">
+      <button class="btn btn-submit" onclick="submitAnswer()">📤 제출</button>
+      <button class="btn btn-hint"   onclick="showHint()">💡 힌트</button>
+      <button class="btn btn-sample" onclick="showSample()">📖 모범</button>
+    </div>
+    <div class="btn-row-2">
+      <button class="btn btn-next"  onclick="nextStep()">⏭ 다음 단계</button>
+      <button class="btn btn-reset" onclick="resetStep()">🔄 다시</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const scenarios = [
+  {
+    title: "🎬 영화관 예매 취소",
+    situation: "이번 주 토요일 저녁 7시 영화 2장을 예매했는데, 갑자기 가족 행사가 생겼습니다. 영화관 직원에게 전화해 해결책을 찾으세요.",
+    steps: [
+      {
+        label: "11번\n질문하기",
+        examiner: "Hello! You're calling the movie theater. Please ask at least 3 questions about booking tickets for this weekend.",
+        hint: "💬 물어볼 것\n① 이번 주말 상영 영화\n② 저녁 시간대 여부\n③ 할인 여부\n④ 온라인 예매 가능 여부",
+        sample: `Hello! I'd like to get some information about booking tickets this weekend. Um, first of all, what movies are currently showing? And are there evening shows available — maybe around 7 or 8 PM? Also, do you offer any discounts, like for membership cards? Oh, and one more thing — can I book online in advance? Thank you so much!`
+      },
+      {
+        label: "12번\n문제설명",
+        examiner: "You booked 2 tickets for Saturday 7PM, but something came up. Call the theater and explain why you can't make it.",
+        hint: "💬 핵심 표현\n• 'something came up'\n• 'I had a family emergency'\n• 'completely out of my control'\n• 'I was wondering if I could get a refund'",
+        sample: `Hi, I'm really sorry to bother you, but I have a bit of a problem. I booked two tickets for the 7 PM showing this Saturday, but unfortunately something came up — I have a family event I completely forgot about, and it was totally out of my control. I was wondering if it would be possible to cancel and perhaps get a refund? I have my booking confirmation number ready. I'm really sorry for the inconvenience!`
+      },
+      {
+        label: "13번\n대안제시",
+        examiner: "The theater says they can't give a full refund due to policy. Offer 2-3 alternative solutions.",
+        hint: "💬 대안 3가지\n① 날짜 변경\n② 친구에게 양도\n③ 크레딧/바우처 요청\n\n'In that case' / 'As an alternative' / 'Would it be possible to'",
+        sample: `Oh, I see. That's a bit disappointing, but I completely understand the policy. In that case, could we explore some other options? For instance, would it be possible to change the date to next weekend? Or, if that's not an option, could I transfer the tickets to a friend who's available? And if neither works, would you be able to give me a store credit for a future visit? I'd really appreciate any flexibility you can offer!`
+      }
+    ]
+  },
+  {
+    title: "👗 옷 교환 요청",
+    situation: "온라인으로 주문한 셔츠가 왔는데 사이즈도 맞지 않고 색상도 다릅니다. 고객센터에 전화해 문제를 해결하세요.",
+    steps: [
+      {
+        label: "11번\n교환절차",
+        examiner: "You received the wrong item. Call customer service and ask 3+ questions about the return/exchange process.",
+        hint: "💬 질문할 것\n① 교환 절차\n② 반품 기간\n③ 배송비 부담\n④ 원하는 사이즈 재고 여부",
+        sample: `Hi there! I received a package today, but there seems to be an issue. Before I explain, could I ask a few questions? First, what's your exchange policy for items sent incorrectly? And is there a time limit for returns? Would I need to pay for return shipping since it was a mistake on your end? And could you check if the item I originally ordered is still in stock? Thank you!`
+      },
+      {
+        label: "12번\n불만설명",
+        examiner: "Explain specifically what went wrong with your order. Be detailed and clear.",
+        hint: "💬 핵심 구조\n'The item I received was...'\n'However, what I ordered was...'\n'This is clearly a mistake'\n\n→ 구체적인 색상/사이즈 언급 필수!",
+        sample: `So here's the issue — I ordered a medium-sized white button-down shirt, but what I received was a large in navy blue. It doesn't match my order at all, and it's clearly a fulfillment error. I've checked my order confirmation and it clearly states medium and white. I'm not upset, but I need this resolved quickly as I need it for an event next week. Could you help me find the fastest solution?`
+      },
+      {
+        label: "13번\n협상하기",
+        examiner: "The item you want is out of stock. Offer alternatives or negotiate a solution.",
+        hint: "💬 대안들\n• 전액 환불 (full refund)\n• 다른 색상/스타일 대안\n• 급행 배송 요청\n\n'As a compromise' / 'In that case'",
+        sample: `Oh, that's really unfortunate. Well, in that case, could I get a full refund instead? Or if there's a similar style in the correct size in white or grey, I might be open to that. Also, since this was a mistake on your end, would it be possible to arrange express shipping? I'd really appreciate a solution that works for both of us.`
+      }
+    ]
+  },
+  {
+    title: "🏋️ 헬스장 등록 문의",
+    situation: "집 근처에 새로 생긴 헬스장에 등록하려 합니다. 전화로 시설과 요금을 문의하고 특별 할인도 받을 수 있는지 확인하세요.",
+    steps: [
+      {
+        label: "11번\n시설문의",
+        examiner: "Call a new gym and ask at least 3 questions about the facilities and membership.",
+        hint: "💬 질문 아이디어\n① 운영 시간 (주말 포함)\n② 기구/수업 종류\n③ 멤버십 종류와 가격\n④ 무료 체험 가능 여부",
+        sample: `Hi! I'm interested in joining and I have a few questions. First, what are your opening hours — including weekends? And what kind of equipment and classes do you have? I'm particularly interested in cardio and group fitness. Also, what membership options and monthly fees do you offer? Oh, and do you by any chance offer a free trial? That would really help me decide!`
+      },
+      {
+        label: "12번\n가격협상",
+        examiner: "The membership is more expensive than expected. Try to negotiate or ask about discounts.",
+        hint: "💬 협상 표현\n• 'That's a bit more than I was expecting'\n• 'Is there any promotional offer?'\n• 'If I sign up for 6 months...'\n\n→ 부드럽게, 하지만 명확하게!",
+        sample: `I see, thank you. Honestly, that's a bit more than I was expecting — I was hoping for around 50,000 won a month. Is there any promotional offer or new member discount? And if I sign up for 6 months or a year upfront, would there be a reduced rate? I'm genuinely interested, so I want to see if we can find something that works for my budget.`
+      },
+      {
+        label: "13번\n대안요청",
+        examiner: "No discount available. Ask about other options to make the membership work for you.",
+        hint: "💬 대안들\n① 오프피크 플랜 (특정 시간대)\n② 친구 추천 혜택\n③ 단기 플랜 먼저 시도\n\n'In that case, could I...'",
+        sample: `Alright, I understand. In that case, are there off-peak membership options? I usually work out on weekday mornings, so if there's a plan for certain times, I'd be open to that if it's cheaper. Also, do you have a referral program? I have a friend who might join too. I really like what I've heard — I'd love to make it work!`
+      }
+    ]
+  },
+  {
+    title: "🏨 호텔 예약 문의",
+    situation: "다음 달 여행을 위해 호텔을 예약하려 합니다. 전화로 객실과 시설을 문의하고, 체크인 날짜도 변경해보세요.",
+    steps: [
+      {
+        label: "11번\n객실문의",
+        examiner: "Call a hotel and ask at least 3 questions about their rooms and facilities.",
+        hint: "💬 질문:\n① 조식 포함 여부\n② 주차 가능 여부\n③ 체크인/아웃 시간\n④ 오션뷰/시티뷰 옵션",
+        sample: `Hello! I'm looking to book a room for next month and have a few questions. Does the room rate include breakfast, or is that separate? Is parking available and if so, is it free? And what are your standard check-in and check-out times? Oh, and do you have rooms with an ocean or city view? That's something I'm particularly interested in. Thank you!`
+      },
+      {
+        label: "12번\n날짜변경",
+        examiner: "You need to change your check-in date due to a schedule change. Call and explain.",
+        hint: "💬 표현:\n• 'My plans have changed slightly'\n• 'I was wondering if it's possible to move the booking'\n• 'I'd still be checking out on the same date'\n\n→ 정중하게 요청!",
+        sample: `Hi, I have an existing reservation and need to make a small change. My travel plans have shifted slightly, and I was wondering if I could move my check-in from the 15th to the 17th? I'd still check out on the same date. I apologize for any inconvenience — I understand if there are different rates. Could you check availability for me?`
+      },
+      {
+        label: "13번\n업그레이드",
+        examiner: "Your original room is unavailable on new dates. Negotiate for alternatives.",
+        hint: "💬 대안:\n① 다른 방 타입 + 가격 차이\n② 얼리 체크인 서비스\n③ 업그레이드 요청\n\n'Given the circumstances' / 'I'd be open to'",
+        sample: `Oh, that's a shame. Well, what other room types are available for those dates? If there's a superior room or suite, I'd be interested in the price difference. And given the change in circumstances, would there be any possibility of a complimentary upgrade or early check-in? I've stayed with you before and I'd really appreciate the accommodation. Whatever works best — I just want a comfortable stay!`
+      }
+    ]
+  },
+  {
+    title: "✈️ 항공편 지연",
+    situation: "비행기가 3시간 지연됐고 호텔 예약과 중요한 미팅을 놓칠 상황입니다. 항공사 직원에게 상황을 설명하고 보상을 요청하세요.",
+    steps: [
+      {
+        label: "11번\n상황파악",
+        examiner: "Your flight is delayed 3 hours. Ask the airline staff at least 3 questions about the situation.",
+        hint: "💬 질문:\n① 지연 이유\n② 정확한 출발 시간\n③ 식사 바우처 제공 여부\n④ 연결편 도움 가능 여부",
+        sample: `Excuse me, my flight has been delayed and I have a few questions. Could you tell me the reason for the delay? And is there an updated departure time? Also, for delays this long, is the airline providing meal vouchers? And I have a connecting flight — is there anything you can do to help if I miss it? Thank you for your help.`
+      },
+      {
+        label: "12번\n불만표현",
+        examiner: "Because of the delay, you'll miss your hotel check-in and an important meeting. Explain this.",
+        hint: "💬 감정 표현 중요!\n• 'This delay is causing me real problems'\n• 'I'm going to miss my hotel check-in'\n• 'I have an important meeting'\n\n→ 강하게 표현하되 aggressive하지 않게!",
+        sample: `I appreciate the update, but this delay is causing me real problems. I have a hotel reservation with a strict check-in deadline — at this rate I'll miss it and lose my booking. On top of that, I have an important business meeting tomorrow morning that I've been preparing for weeks. Is there anything the airline can do — perhaps contacting the hotel or rebooking me on an earlier flight with another carrier?`
+      },
+      {
+        label: "13번\n보상요청",
+        examiner: "Ask for compensation and suggest alternatives if the airline can't fully resolve the issue.",
+        hint: "💬 보상 요청:\n• 마일리지 / 여행 크레딧\n• 다른 항공사 연결편\n• 호텔 비용 보전\n\n'I'd like to request' / 'I feel I'm entitled to'",
+        sample: `Given the circumstances, I'd like to request some form of compensation — at least a travel credit or additional miles, since the delay is on the airline's side. Could you also explore whether there's an earlier flight on a partner airline I could transfer to? Even with a small fare difference, I'd pay it. And if my hotel charges a no-show fee because of this, I'd like to formally request the airline covers that cost. What can you do for me?`
+      }
+    ]
+  },
+  {
+    title: "🍽️ 식당 예약 취소",
+    situation: "특별한 날을 위해 레스토랑에 예약했는데 일행이 아파서 취소해야 합니다. 정중하게 취소하고 재예약을 알아보세요.",
+    steps: [
+      {
+        label: "11번\n취소정책",
+        examiner: "Call a restaurant and ask questions about your upcoming reservation and their cancellation policy.",
+        hint: "💬 질문:\n① 예약 확인\n② 취소 정책 및 패널티\n③ 다른 날짜 재예약 가능 여부",
+        sample: `Hello! I have a reservation for this Saturday and I have a couple of questions. Could you confirm the details — it should be for four people at 7 PM? Also, what's your cancellation policy? And if I need to cancel, would I be able to rebook for a different date? I want to make sure I handle this correctly. Thank you!`
+      },
+      {
+        label: "12번\n취소요청",
+        examiner: "Explain that one of your group members is sick and you need to cancel the reservation.",
+        hint: "💬 핵심 표현:\n• 'I'm calling to cancel'\n• 'one of our party has fallen ill'\n• 'I'm really sorry for the short notice'\n• 'beyond our control'",
+        sample: `Hi, I'm afraid I'm calling with some unfortunate news. I need to cancel our reservation for Saturday at 7 PM. Unfortunately, one of our group has come down with a fever. It was completely unexpected and I'm so sorry for the short notice — I know this is inconvenient. Is it possible to cancel without a charge given the circumstances? I genuinely feel bad about this.`
+      },
+      {
+        label: "13번\n재예약",
+        examiner: "Ask about rebooking for a different date and if there are available times next weekend.",
+        hint: "💬 긍정적으로 마무리!\n• 날짜 2~3개 제시\n• 특별 행사 재확인\n• 'We're really looking forward to coming'",
+        sample: `We were really looking forward to dining with you, so we'd love to come another time. Would next weekend work — either Friday or Saturday evening? We'd still be a group of four, and it's a birthday dinner, so if there's anything special the restaurant can do, that would be amazing! Should I confirm the rebook over the phone, or through your website? We love your restaurant and wouldn't want to miss out!`
+      }
+    ]
+  },
+  {
+    title: "📚 도서관 분실물",
+    situation: "도서관에서 자켓을 두고 나왔습니다. 도서관에 전화해 분실물을 찾고, 없다면 대안을 알아보세요.",
+    steps: [
+      {
+        label: "11번\n분실신고",
+        examiner: "Call the library and report that you left your jacket. Ask 3+ questions.",
+        hint: "💬 질문:\n① 분실물 보관소 유무\n② 자켓 특징 설명\n③ 보관 기간\n④ 찾으러 오는 절차",
+        sample: `Hello! I was at your library earlier and I think I left my jacket behind. Do you have a lost and found? And if someone turned in a jacket, how would I go about claiming it? It's a dark navy blue puffer jacket — quite distinctive. Could you check if anything matching that description has been handed in? And how long do you hold items before disposing of them? I could come by tomorrow to pick it up.`
+      },
+      {
+        label: "12번\n위치설명",
+        examiner: "Describe exactly where you were sitting and what you were doing when you left the jacket.",
+        hint: "💬 장소를 구체적으로!\n• '2층 창가 자습실'\n• 'I was studying at the third cubicle'\n• 'I left around 5:30'\n• 'hanging on the back of the chair'",
+        sample: `Let me give you details that might help. I arrived around 2 PM and was on the second floor near the window on the right-hand side as you come up the stairs. There were study cubicles — I was at the third one from the end. I stayed until about 5:30 and left in a rush to catch a bus. The jacket was hanging on the back of the chair, so it should still be right there if nobody's moved it.`
+      },
+      {
+        label: "13번\n후속조치",
+        examiner: "The library says they haven't found it yet. Ask about next steps and what to do if it doesn't turn up.",
+        hint: "💬 침착하게 대안 제시:\n• '직접 가서 확인'\n• '경비 연락처'\n• 'CCTV 확인 요청'\n\n'Is there anything else I can do?'",
+        sample: `I see, that's disappointing. Is there anything else I can do? Could I come in tomorrow morning and check the area myself? Also, is there a security desk I should speak to when I arrive? And if it still hasn't turned up, would you be able to check CCTV footage to see if someone picked it up? I know that's a lot to ask, but the jacket has sentimental value. I'd really appreciate any help you can offer.`
+      }
+    ]
+  },
+  {
+    title: "☕ 카페 주문 오류",
+    situation: "아이스 아메리카노를 주문했는데 뜨거운 라떼가 나왔고 추가 요금까지 청구됐습니다. 직원에게 정중히 해결을 요청하세요.",
+    steps: [
+      {
+        label: "11번\n문제제기",
+        examiner: "You received the wrong drink order. Report the problem and ask what they can do.",
+        hint: "💬 정중하지만 명확하게!\n• 'There may have been a mix-up'\n• 주문 내용 vs 받은 것 명확히\n• 영수증 언급으로 신뢰도 up",
+        sample: `Excuse me, I think there may have been a mix-up with my order. I ordered an iced Americano, but what I received is a hot latte — they're quite different! Also, I noticed I was charged for a latte, which is more expensive. I'm not upset — mistakes happen — but I have my receipt here. Could you double-check my order? I was hoping to get the correct drink as soon as possible.`
+      },
+      {
+        label: "12번\n추가불만",
+        examiner: "The barista seems confused and takes a long time. Express your frustration politely.",
+        hint: "💬 감정 + 공감 표현:\n• 'I understand it's busy, but...'\n• 'I've been waiting for a while now'\n• 'I'm in a bit of a rush'\n\n→ 짜증 말고 공감으로 접근!",
+        sample: `I completely understand it gets busy, and I really don't want to be difficult — but I've been waiting about 10 minutes now and I do have somewhere to be. Could you give me a quick update? Also, I wanted to confirm — will the price difference be refunded since I was charged for the more expensive drink? I'm sure it was just an honest mistake, and I appreciate you sorting it out.`
+      },
+      {
+        label: "13번\n보상요청",
+        examiner: "They fix the order but can't refund the price difference immediately. Suggest alternatives.",
+        hint: "💬 대안들:\n① 다음 방문 할인 쿠폰\n② 무료 사이드 메뉴\n③ 포인트 적립\n\n'As a goodwill gesture' / 'I'm a regular here'",
+        sample: `I appreciate you fixing the drink — thank you! As for the price difference, I understand if an immediate refund isn't possible. In that case, would it be possible to offer a discount coupon for my next visit as a goodwill gesture? Or maybe add some extra loyalty points? I'm a regular here, so something like that would really go a long way. I'm not looking for anything big — just some acknowledgment of the inconvenience. Thank you for being understanding!`
+      }
+    ]
+  }
+];
+
+let curScene = 0;
+let curStep  = 0;
+let hintShown = false;
+
+function startScenario(idx) {
+  curScene = idx;
+  curStep  = 0;
+  hintShown = false;
+  document.getElementById('navTitle').textContent = scenarios[idx].title;
+  renderStepTabs();
+  renderChat();
+  updateProgress();
+  showScreen('screen-practice');
+  document.getElementById('userInput').value = '';
+}
+
+function goBack() {
+  showScreen('screen-list');
+}
+
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  if (id === 'screen-practice') {
+    setTimeout(() => scrollBottom(), 100);
+  }
+}
+
+function renderStepTabs() {
+  const steps = scenarios[curScene].steps;
+  document.getElementById('stepTabs').innerHTML = steps.map((s, i) =>
+    `<button class="step-tab ${i===curStep?'active':''}" onclick="jumpStep(${i})">${s.label}</button>`
+  ).join('');
+}
+
+function jumpStep(idx) {
+  curStep = idx;
+  hintShown = false;
+  renderStepTabs();
+  renderChat();
+  updateProgress();
+  document.getElementById('userInput').value = '';
+}
+
+function renderChat() {
+  const s = scenarios[curScene].steps[curStep];
+  const sc = scenarios[curScene];
+  document.getElementById('chatScroll').innerHTML = `
+    <div class="situation-card">
+      <strong>📍 상황</strong><br>${sc.situation}
+    </div>
+    <div class="msg">
+      <div class="msg-avatar av-examiner">🎤</div>
+      <div class="msg-body">
+        <div class="msg-label lbl-examiner">면접관 (Examiner)</div>
+        <div class="bubble examiner">${s.examiner}</div>
+        <div class="sample-toggle" onclick="toggleSample(this)">📖 모범 답변 보기 ▼</div>
+        <div class="sample-box">${s.sample}</div>
+      </div>
+    </div>
+  `;
+  scrollBottom();
+}
+
+function toggleSample(el) {
+  const box = el.nextElementSibling;
+  box.classList.toggle('show');
+  el.textContent = box.classList.contains('show') ? '📖 모범 답변 닫기 ▲' : '📖 모범 답변 보기 ▼';
+  scrollBottom();
+}
+
+function showHint() {
+  if (hintShown) return;
+  hintShown = true;
+  const s = scenarios[curScene].steps[curStep];
+  appendMsg('av-hint', 'lbl-hint', '💡 힌트', 'hint', s.hint);
+}
+
+function showSample() {
+  const boxes = document.querySelectorAll('.sample-box');
+  if (boxes.length > 0) {
+    const box = boxes[boxes.length - 1];
+    box.classList.add('show');
+    const tog = box.previousElementSibling;
+    if (tog) tog.textContent = '📖 모범 답변 닫기 ▲';
+    scrollBottom();
+  }
+}
+
+function submitAnswer() {
+  const ta = document.getElementById('userInput');
+  const text = ta.value.trim();
+  if (!text) return;
+  appendMsg('av-you', 'lbl-you', '내 답변', 'your-answer', text);
+  appendMsg('av-feedback', 'lbl-feedback', '자체 평가 체크리스트', 'feedback',
+    `✅ 질문/요청을 <b>명확하게</b> 전달했나요?
+✅ <b>필러</b> (Well / Um / Let me think...) 를 사용했나요?
+✅ <b>감정 표현</b>이 들어갔나요? (I'm sorry / I appreciate...)
+✅ 답변이 충분히 <b>길고 자연스러웠나요?</b>
+✅ 모범답변과 비교해 <b>빠진 포인트</b>가 있나요?`
+  );
+  ta.value = '';
+  ta.style.height = 'auto';
+}
+
+function nextStep() {
+  const steps = scenarios[curScene].steps;
+  if (curStep < steps.length - 1) {
+    curStep++;
+    hintShown = false;
+    renderStepTabs();
+    renderChat();
+    updateProgress();
+    document.getElementById('userInput').value = '';
+  } else {
+    appendMsg('av-done', 'lbl-done', '완료! 🏆', 'done',
+      `<b>이 시나리오를 모두 완료했습니다! 🎉</b>\n\n다음 단계:\n1. 모범 답변을 소리내어 읽기\n2. 힌트 없이 처음부터 다시 도전\n3. 왼쪽에서 새 시나리오 선택\n\n'🔄 다시' 버튼으로 반복 연습하세요!`
+    );
+  }
+}
+
+function resetStep() {
+  hintShown = false;
+  renderStepTabs();
+  renderChat();
+  updateProgress();
+  document.getElementById('userInput').value = '';
+}
+
+function updateProgress() {
+  const pct = (curStep / scenarios[curScene].steps.length) * 100;
+  document.getElementById('progressFill').style.width = pct + '%';
+}
+
+function appendMsg(avatarClass, labelClass, label, bubbleClass, text) {
+  const area = document.getElementById('chatScroll');
+  const div = document.createElement('div');
+  div.className = 'msg';
+  div.innerHTML = `
+    <div class="msg-avatar ${avatarClass}">${avatarEmoji(avatarClass)}</div>
+    <div class="msg-body">
+      <div class="msg-label ${labelClass}">${label}</div>
+      <div class="bubble ${bubbleClass}">${text.replace(/\n/g,'<br>')}</div>
+    </div>`;
+  area.appendChild(div);
+  scrollBottom();
+}
+
+function avatarEmoji(cls) {
+  return { 'av-examiner':'🎤','av-you':'✍️','av-hint':'💡','av-feedback':'⭐','av-done':'🏆' }[cls] || '💬';
+}
+
+function scrollBottom() {
+  const area = document.getElementById('chatScroll');
+  setTimeout(() => { area.scrollTop = area.scrollHeight; }, 50);
+}
+
+// textarea auto-resize & Enter to submit
+const ta = document.getElementById('userInput');
+ta.addEventListener('input', function() {
+  this.style.height = 'auto';
+  this.style.height = Math.min(this.scrollHeight, 100) + 'px';
+});
+ta.addEventListener('keydown', function(e) {
+  if (e.key === 'Enter' && !e.shiftKey) {
+    e.preventDefault();
+    submitAnswer();
+  }
+});
+
+// Init first scenario silently
+curScene = 0; curStep = 0;
+
+// ═══════════════════════════════════════════════
+// PWA: 아이콘 + 스플래시 Canvas 생성
+// ═══════════════════════════════════════════════
+function makeIconDataURL(size) {
+  const c = document.createElement('canvas');
+  c.width = c.height = size;
+  const ctx = c.getContext('2d');
+  // 배경 라운드 rect
+  const r = size * 0.22;
+  ctx.beginPath();
+  ctx.moveTo(r, 0); ctx.lineTo(size - r, 0);
+  ctx.quadraticCurveTo(size, 0, size, r);
+  ctx.lineTo(size, size - r);
+  ctx.quadraticCurveTo(size, size, size - r, size);
+  ctx.lineTo(r, size); ctx.quadraticCurveTo(0, size, 0, size - r);
+  ctx.lineTo(0, r); ctx.quadraticCurveTo(0, 0, r, 0);
+  ctx.closePath();
+  const g = ctx.createLinearGradient(0, 0, size, size);
+  g.addColorStop(0, '#1E40AF'); g.addColorStop(1, '#3B82F6');
+  ctx.fillStyle = g; ctx.fill();
+  // 이모지
+  ctx.font = `${size * 0.52}px serif`;
+  ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  ctx.fillText('🎭', size / 2, size / 2 + size * 0.04);
+  return c.toDataURL('image/png');
+}
+
+function makeSplashDataURL(w, h) {
+  const c = document.createElement('canvas');
+  c.width = w; c.height = h;
+  const ctx = c.getContext('2d');
+  ctx.fillStyle = '#0F1623'; ctx.fillRect(0, 0, w, h);
+  // Icon
+  const iconSize = Math.min(w, h) * 0.28;
+  const ix = (w - iconSize) / 2, iy = h * 0.32;
+  const r = iconSize * 0.22;
+  ctx.beginPath();
+  ctx.moveTo(ix + r, iy); ctx.lineTo(ix + iconSize - r, iy);
+  ctx.quadraticCurveTo(ix + iconSize, iy, ix + iconSize, iy + r);
+  ctx.lineTo(ix + iconSize, iy + iconSize - r);
+  ctx.quadraticCurveTo(ix + iconSize, iy + iconSize, ix + iconSize - r, iy + iconSize);
+  ctx.lineTo(ix + r, iy + iconSize); ctx.quadraticCurveTo(ix, iy + iconSize, ix, iy + iconSize - r);
+  ctx.lineTo(ix, iy + r); ctx.quadraticCurveTo(ix, iy, ix + r, iy);
+  ctx.closePath();
+  const g = ctx.createLinearGradient(ix, iy, ix + iconSize, iy + iconSize);
+  g.addColorStop(0, '#1E40AF'); g.addColorStop(1, '#3B82F6');
+  ctx.fillStyle = g; ctx.fill();
+  ctx.font = `${iconSize * 0.52}px serif`;
+  ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  ctx.fillText('🎭', w / 2, iy + iconSize / 2 + iconSize * 0.04);
+  // Title
+  ctx.fillStyle = '#FFFFFF';
+  ctx.font = `700 ${Math.round(w * 0.065)}px -apple-system, sans-serif`;
+  ctx.fillText('OPIc 롤플레이 연습', w / 2, iy + iconSize + h * 0.1);
+  ctx.fillStyle = '#64748B';
+  ctx.font = `400 ${Math.round(w * 0.042)}px -apple-system, sans-serif`;
+  ctx.fillText('IM3 → IH 실전 연습', w / 2, iy + iconSize + h * 0.165);
+  return c.toDataURL('image/png');
+}
+
+// 아이콘 적용
+document.getElementById('apple-touch-icon').href     = makeIconDataURL(180);
+document.getElementById('apple-touch-icon-152').href = makeIconDataURL(152);
+document.getElementById('apple-touch-icon-120').href = makeIconDataURL(120);
+
+// 스플래시 적용
+document.getElementById('splash-2796').href = makeSplashDataURL(1290, 2796);
+document.getElementById('splash-2556').href = makeSplashDataURL(1179, 2556);
+document.getElementById('splash-2532').href = makeSplashDataURL(1170, 2532);
+document.getElementById('splash-2436').href = makeSplashDataURL(1125, 2436);
+document.getElementById('splash-1334').href = makeSplashDataURL(750,  1334);
+
+// ═══════════════════════════════════════════════
+// PWA: Inline Service Worker (오프라인 캐싱)
+// ═══════════════════════════════════════════════
+if ('serviceWorker' in navigator) {
+  const swCode = `
+    const CACHE = 'opic-v1';
+    self.addEventListener('install', e => {
+      e.waitUntil(
+        caches.open(CACHE).then(c => c.addAll([self.location.pathname]))
+          .then(() => self.skipWaiting())
+      );
+    });
+    self.addEventListener('activate', e => {
+      e.waitUntil(
+        caches.keys().then(keys =>
+          Promise.all(keys.filter(k => k !== CACHE).map(k => caches.delete(k)))
+        ).then(() => self.clients.claim())
+      );
+    });
+    self.addEventListener('fetch', e => {
+      e.respondWith(
+        caches.match(e.request).then(r => r || fetch(e.request).then(res => {
+          const clone = res.clone();
+          caches.open(CACHE).then(c => c.put(e.request, clone));
+          return res;
+        }).catch(() => caches.match(e.request)))
+      );
+    });
+  `;
+  const blob = new Blob([swCode], { type: 'application/javascript' });
+  const swURL = URL.createObjectURL(blob);
+  navigator.serviceWorker.register(swURL).catch(() => {});
+}
+
+// ═══════════════════════════════════════════════
+// PWA: "홈 화면에 추가" 안내 배너 (최초 1회)
+// ═══════════════════════════════════════════════
+const isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent);
+const isStandalone = window.navigator.standalone === true;
+const bannerShown = sessionStorage.getItem('pwa-banner-shown');
+
+if (isIOS && !isStandalone && !bannerShown) {
+  sessionStorage.setItem('pwa-banner-shown', '1');
+  const banner = document.createElement('div');
+  banner.id = 'pwa-banner';
+  banner.innerHTML = `
+    <div style="display:flex;align-items:flex-start;gap:12px;">
+      <div style="font-size:22px;flex-shrink:0;margin-top:2px;">📱</div>
+      <div style="flex:1;">
+        <div style="font-weight:700;font-size:14px;color:#fff;margin-bottom:4px;">앱으로 추가하기</div>
+        <div style="font-size:12px;color:#94A3B8;line-height:1.6;">
+          Safari 하단 <b style="color:#60A5FA;">공유 버튼 <span style="font-size:16px;">⎙</span></b> 을 탭한 후<br>
+          <b style="color:#60A5FA;">"홈 화면에 추가"</b> 를 선택하면<br>
+          오프라인에서도 앱처럼 사용할 수 있어요!
+        </div>
+      </div>
+      <div id="pwa-close" style="font-size:18px;color:#64748B;cursor:pointer;padding:4px;flex-shrink:0;">✕</div>
+    </div>
+  `;
+  Object.assign(banner.style, {
+    position: 'fixed', bottom: `calc(env(safe-area-inset-bottom, 0px) + 12px)`,
+    left: '12px', right: '12px', zIndex: '9999',
+    background: '#1E2D45', border: '1px solid #2A3D58',
+    borderRadius: '16px', padding: '14px 14px',
+    boxShadow: '0 8px 32px rgba(0,0,0,0.6)',
+    animation: 'slideUp 0.35s cubic-bezier(.22,.68,0,1.2) both'
+  });
+  const style = document.createElement('style');
+  style.textContent = `@keyframes slideUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}`;
+  document.head.appendChild(style);
+  document.body.appendChild(banner);
+  document.getElementById('pwa-close').onclick = () => banner.remove();
+  setTimeout(() => { if (banner.parentNode) banner.remove(); }, 12000);
+}
+</script>
+</body>
+</html>

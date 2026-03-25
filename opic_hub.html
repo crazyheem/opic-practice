@@ -1,0 +1,1458 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="OPIc Hub">
+<meta name="theme-color" content="#0A0F1E">
+<title>OPIc 학습 허브</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&family=Sora:wght@600;700;800&display=swap');
+
+:root {
+  --bg: #0A0F1E; --surface: #111827; --surface2: #1a2235;
+  --border: #1F2D45; --accent: #3B82F6; --accent2: #60A5FA;
+  --green: #10B981; --amber: #F59E0B; --purple: #8B5CF6;
+  --red: #EF4444; --text: #F1F5F9; --text2: #94A3B8; --text3: #475569;
+  --sat: env(safe-area-inset-top,0px); --sab: env(safe-area-inset-bottom,0px);
+}
+* { box-sizing:border-box; margin:0; padding:0; -webkit-tap-highlight-color:transparent; }
+html,body { height:100%; height:-webkit-fill-available; font-family:'Noto Sans KR',-apple-system,sans-serif; background:var(--bg); color:var(--text); overflow:hidden; -webkit-font-smoothing:antialiased; }
+
+/* SCREENS */
+.screen { display:none; flex-direction:column; height:100%; height:-webkit-fill-available; }
+.screen.active { display:flex; }
+
+/* ── HOME ── */
+.home-header {
+  padding:calc(var(--sat) + 18px) 20px 16px;
+  background:linear-gradient(160deg,#0d1929,#0A0F1E);
+  border-bottom:1px solid var(--border); flex-shrink:0;
+}
+.home-logo { display:flex; align-items:center; gap:12px; margin-bottom:4px; }
+.logo-icon { width:46px;height:46px;border-radius:14px;background:linear-gradient(135deg,#1D4ED8,#7C3AED);display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0; }
+.logo-title { font-family:'Sora',sans-serif;font-size:20px;font-weight:800;color:#fff; }
+.logo-sub { font-size:12px;color:var(--text3);margin-top:1px; }
+.home-desc { font-size:12px;color:var(--text3);line-height:1.6;margin-top:8px;background:rgba(255,255,255,0.03);border-radius:8px;padding:8px 12px; }
+
+.home-scroll { flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:14px 14px calc(var(--sab)+20px); }
+.section-label { font-size:10px;font-weight:700;letter-spacing:1.3px;text-transform:uppercase;color:var(--text3);padding:14px 4px 8px;display:flex;align-items:center;gap:6px; }
+.section-label span { font-size:14px; }
+
+.app-card {
+  background:var(--surface);border:1px solid var(--border);border-radius:16px;
+  padding:16px;margin-bottom:10px;cursor:pointer;
+  display:flex;align-items:center;gap:14px;
+  transition:all .15s;-webkit-user-select:none;
+}
+.app-card:active { transform:scale(0.97);background:var(--surface2); }
+.app-card.featured { border-color:rgba(59,130,246,0.4);background:rgba(59,130,246,0.05); }
+.card-icon { width:48px;height:48px;border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:24px;flex-shrink:0; }
+.card-body { flex:1;min-width:0; }
+.card-title { font-family:'Sora',sans-serif;font-size:14px;font-weight:700;color:#fff;margin-bottom:3px; }
+.card-desc { font-size:12px;color:var(--text3);line-height:1.5; }
+.card-tags { display:flex;gap:5px;margin-top:6px;flex-wrap:wrap; }
+.tag { font-size:10px;font-weight:600;padding:2px 7px;border-radius:5px;background:rgba(59,130,246,0.1);color:var(--accent2);border:1px solid rgba(59,130,246,0.2); }
+.card-arrow { color:var(--text3);font-size:18px;flex-shrink:0; }
+
+/* ── DOC READER ── */
+.doc-nav {
+  padding:calc(var(--sat)+12px) 16px 10px;
+  background:var(--surface);border-bottom:1px solid var(--border);flex-shrink:0;
+  display:flex;align-items:center;gap:10px;
+}
+.back-btn { width:36px;height:36px;border-radius:10px;background:var(--surface2);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:18px;cursor:pointer;flex-shrink:0;-webkit-user-select:none; }
+.back-btn:active { opacity:.6; }
+.doc-nav-title { font-family:'Sora',sans-serif;font-size:15px;font-weight:700;color:#fff;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis; }
+
+.doc-toc { flex-shrink:0;padding:10px 14px;background:var(--surface2);border-bottom:1px solid var(--border);overflow-x:auto;-webkit-overflow-scrolling:touch;display:flex;gap:6px;white-space:nowrap; }
+.toc-btn { padding:5px 10px;border-radius:7px;border:1px solid var(--border);background:var(--surface);color:var(--text3);font-size:11px;font-weight:600;cursor:pointer;-webkit-user-select:none;white-space:nowrap;flex-shrink:0; }
+.toc-btn:active { opacity:.7; }
+
+.doc-scroll { flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:16px 16px calc(var(--sab)+16px); }
+
+/* Document styles */
+.doc-h1 { font-family:'Sora',sans-serif;font-size:18px;font-weight:800;color:var(--accent2);margin:24px 0 10px;padding-bottom:8px;border-bottom:2px solid rgba(59,130,246,0.3); }
+.doc-h2 { font-family:'Sora',sans-serif;font-size:15px;font-weight:700;color:#93C5FD;margin:18px 0 8px; }
+.doc-bold { font-size:13px;font-weight:700;color:var(--text);margin:6px 0; }
+.doc-p { font-size:13px;color:var(--text2);line-height:1.75;margin:5px 0; }
+.doc-italic { font-size:13px;color:var(--text3);font-style:italic;line-height:1.7;margin:4px 0; }
+.doc-li { font-size:13px;color:var(--text2);line-height:1.7;margin:3px 0 3px 16px;list-style:disc; }
+.doc-highlight { font-size:13px;color:#FDE68A;background:rgba(245,158,11,0.08);border-left:3px solid var(--amber);padding:6px 10px;border-radius:0 6px 6px 0;margin:6px 0;line-height:1.65; }
+.doc-script-label { font-size:12px;font-weight:700;color:var(--accent2);margin:4px 0 1px; }
+
+.doc-table-wrap { overflow-x:auto;-webkit-overflow-scrolling:touch;margin:10px 0; }
+.doc-table { border-collapse:collapse;width:100%;min-width:300px;font-size:12px; }
+.doc-table th { background:rgba(59,130,246,0.2);color:#93C5FD;font-weight:700;padding:8px 10px;border:1px solid var(--border);text-align:left; }
+.doc-table td { padding:7px 10px;border:1px solid var(--border);color:var(--text2);line-height:1.55;vertical-align:top; }
+.doc-table tr:nth-child(even) td { background:rgba(255,255,255,0.02); }
+.doc-tables-section { margin-top:20px;padding-top:16px;border-top:1px solid var(--border); }
+
+/* ── APP LAUNCHER ── */
+.launcher-screen { background:var(--bg); }
+.launcher-header {
+  padding:calc(var(--sat)+14px) 16px 12px;
+  background:var(--surface);border-bottom:1px solid var(--border);flex-shrink:0;
+  display:flex;align-items:center;gap:10px;
+}
+.app-frame-wrap {
+  flex:1;display:flex;flex-direction:column;overflow:hidden;
+  background:var(--bg);
+}
+.app-iframe { flex:1;width:100%;border:none;background:var(--bg); }
+
+/* scrollbar */
+::-webkit-scrollbar { width:4px; }
+::-webkit-scrollbar-track { background:transparent; }
+::-webkit-scrollbar-thumb { background:var(--border);border-radius:2px; }
+</style>
+</head>
+<body>
+
+<!-- ═══════════════════════════ HOME ═══════════════════════════ -->
+<div class="screen active" id="screen-home">
+  <div class="home-header">
+    <div class="home-logo">
+      <div class="logo-icon">📚</div>
+      <div>
+        <div class="logo-title">OPIc 학습 허브</div>
+        <div class="logo-sub">IM3 → IH + IT 인프라 영어 완전 정복</div>
+      </div>
+    </div>
+    <div class="home-desc">💡 모든 학습 자료를 한 곳에서 — 문서 읽기, 롤플레이 연습, 오디오 청취까지</div>
+  </div>
+
+  <div class="home-scroll">
+
+    <div class="section-label"><span>📖</span> 학습 문서</div>
+
+    <div class="app-card featured" onclick="openDoc('ih')">
+      <div class="card-icon" style="background:linear-gradient(135deg,#1E40AF,#2563EB)">📋</div>
+      <div class="card-body">
+        <div class="card-title">IH 완전 정복 플랜</div>
+        <div class="card-desc">2개월 로드맵 + 주제별 스크립트 + 롤플레이 가이드</div>
+        <div class="card-tags"><span class="tag">전략</span><span class="tag">스크립트</span><span class="tag">필러표현</span><span class="tag">체크리스트</span></div>
+      </div>
+      <div class="card-arrow">›</div>
+    </div>
+
+    <div class="app-card featured" onclick="openDoc('extra')">
+      <div class="card-icon" style="background:linear-gradient(135deg,#6D28D9,#A855F7)">💬</div>
+      <div class="card-body">
+        <div class="card-title">돌발주제 + 숙어/동사 정리</div>
+        <div class="card-desc">돌발주제 10개 스크립트 + 필수 숙어 40개 + 동사 40개</div>
+        <div class="card-tags"><span class="tag">돌발주제</span><span class="tag">숙어</span><span class="tag">동사구</span><span class="tag">예문</span></div>
+      </div>
+      <div class="card-arrow">›</div>
+    </div>
+
+    <div class="section-label"><span>🎭</span> 실전 연습</div>
+
+    <div class="app-card" onclick="openApp('roleplay')">
+      <div class="card-icon" style="background:linear-gradient(135deg,#1E3A5F,#3B82F6)">🎭</div>
+      <div class="card-body">
+        <div class="card-title">롤플레이 연습 앱</div>
+        <div class="card-desc">8개 시나리오 · 11→12→13번 3콤보 · 힌트 + 모범답변</div>
+        <div class="card-tags"><span class="tag">영화관</span><span class="tag">호텔</span><span class="tag">항공</span><span class="tag">+5개</span></div>
+      </div>
+      <div class="card-arrow">›</div>
+    </div>
+
+    <div class="section-label"><span>🎧</span> 오디오 학습</div>
+
+    <div class="app-card" onclick="openApp('audio')">
+      <div class="card-icon" style="background:linear-gradient(135deg,#1D4ED8,#7C3AED)">🎧</div>
+      <div class="card-body">
+        <div class="card-title">오디오북 (54개 트랙)</div>
+        <div class="card-desc">운전 중 청취 · 따라말하기 모드 · IT 인프라 영어 포함</div>
+        <div class="card-tags"><span class="tag">숙어</span><span class="tag">스크립트</span><span class="tag">IT영어</span><span class="tag">VMware</span><span class="tag">K8s</span></div>
+      </div>
+      <div class="card-arrow">›</div>
+    </div>
+
+    <div class="section-label"><span>☁️</span> IT 인프라 트랙</div>
+
+    <div class="app-card" onclick="openApp('audio')">
+      <div class="card-icon" style="background:linear-gradient(135deg,#065F46,#0D9488)">🖥️</div>
+      <div class="card-body">
+        <div class="card-title">VMware / K8s / IaC 단어장</div>
+        <div class="card-desc">vSphere·NSX·Terraform·ArgoCD·클라우드 핵심 용어 48개</div>
+        <div class="card-tags"><span class="tag">VMware</span><span class="tag">Kubernetes</span><span class="tag">Terraform</span><span class="tag">Cloud</span></div>
+      </div>
+      <div class="card-arrow">›</div>
+    </div>
+
+    <div class="app-card" onclick="openApp('audio')">
+      <div class="card-icon" style="background:linear-gradient(135deg,#7C2D12,#DC2626)">🚨</div>
+      <div class="card-body">
+        <div class="card-title">인프라 실무 영어 스크립트</div>
+        <div class="card-desc">아키텍처 설명 · 인시던트 브리핑 · 마이그레이션 · 자동화</div>
+        <div class="card-tags"><span class="tag">고객설명</span><span class="tag">P1대응</span><span class="tag">이전계획</span><span class="tag">IaC</span></div>
+      </div>
+      <div class="card-arrow">›</div>
+    </div>
+
+    <div class="app-card" onclick="openApp('audio')">
+      <div class="card-icon" style="background:linear-gradient(135deg,#4C1D95,#7C3AED)">🎯</div>
+      <div class="card-body">
+        <div class="card-title">외국인 팀원 논의 + 기술 인터뷰</div>
+        <div class="card-desc">설계 설명 · 되묻기 · 반대의견 · Slack/데모/인터뷰 영어</div>
+        <div class="card-tags"><span class="tag">팀논의</span><span class="tag">되묻기</span><span class="tag">인터뷰</span><span class="tag">데모</span></div>
+      </div>
+      <div class="card-arrow">›</div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ═══════════════════════════ DOC READER ═══════════════════════════ -->
+<div class="screen" id="screen-doc">
+  <div class="doc-nav">
+    <div class="back-btn" onclick="goHome()">‹</div>
+    <div class="doc-nav-title" id="docNavTitle">문서 읽기</div>
+  </div>
+  <div class="doc-toc" id="docToc"></div>
+  <div class="doc-scroll" id="docScroll"></div>
+</div>
+
+<!-- ═══════════════════════════ APP LAUNCHER ═══════════════════════════ -->
+<div class="screen" id="screen-app">
+  <div class="launcher-header">
+    <div class="back-btn" onclick="goHome()">‹</div>
+    <div class="doc-nav-title" id="appNavTitle">앱</div>
+  </div>
+  <div class="app-frame-wrap">
+    <iframe class="app-iframe" id="appIframe" src="" allow="microphone *"></iframe>
+  </div>
+</div>
+
+<script>
+// ═══ DOC CONTENT ═══
+const DOCS = {
+  ih: {
+    title: '📋 IH 완전 정복 플랜',
+    html: `<p class="doc-bold">OPIc IH 완전 정복 플랜</p>
+<p class="doc-p">IM2 보유자를 위한 맞춤 학습 로드맵 + 실전 스크립트</p>
+<p class="doc-bold">선택 주제: 영화/드라마 · 음악 · 운동 · 여행</p>
+<h1 class="doc-h1">PART 1. IH 합격 전략 총정리</h1>
+<h2 class="doc-h2">1-1. IH 등급이 요구하는 것</h2>
+<p class="doc-p">IH는 단순히 '익숙한 주제를 나열'하는 IM 수준을 넘어, 복잡한 상황도 논리적으로 설명할 수 있어야 합니다.</p>
+<h2 class="doc-h2">1-2. IH 핵심 채점 기준 4가지</h2>
+<li class="doc-li">Global Tasks/Functions: 낯선 상황도 설명·해결 가능한가</li>
+<li class="doc-li">Context/Content: 답변이 논리적이고 내용이 풍부한가</li>
+<li class="doc-li">Accuracy/Comprehensibility: 의미 전달에 큰 문제가 없는가 (완벽한 문법 불필요)</li>
+<li class="doc-li">Text Type: 문단 수준의 확장된 발화가 가능한가</li>
+<p class="doc-highlight">⚠️ 스크립트 그대로 암기는 감점 요소! '흐름'을 익혀서 자연스럽게 말하는 게 핵심입니다.</p>
+<h2 class="doc-h2">1-3. 시험 설정 전략</h2>
+<h1 class="doc-h1">PART 2. 2개월 학습 로드맵</h1>
+<p class="doc-p">IM2 보유자 기준, 2개월 플랜입니다. 현재 실력에 따라 1~2주 조정하세요.</p>
+<h1 class="doc-h1">PART 3. IH 답변 황금 구조</h1>
+<h2 class="doc-h2">3-1. 기본 구조: 서론 → 본론 → 결론</h2>
+<h2 class="doc-h2">3-2. IH 필수 필러(Filler) 표현</h2>
+<h1 class="doc-h1">PART 4. 실전 스크립트 모음</h1>
+<p class="doc-bold">아래 스크립트는 '흐름'을 익히는 용도입니다. 완전히 암기하지 말고, 키워드 위주로 자기 말로 응용하세요.</p>
+<h2 class="doc-h2">📽️ 주제 1: 영화 / 드라마 감상</h2>
+<p class="doc-bold">① 묘사(Description): 자주 가는 영화관 묘사</p>
+<p class="doc-italic">💡 'I really appreciate', 'What I also love is' 같은 표현이 IH 포인트! 단순 나열 대신 감정·이유를 넣으세요.</p>
+<p class="doc-bold">② 과거경험(Past Experience): 기억에 남는 영화</p>
+<p class="doc-italic">💡 'I was blown away', 'my jaw just dropped' — 감정 표현을 강하게! 단순히 'I liked it'은 IM 수준.</p>
+<p class="doc-bold">③ 비교(Comparison): 과거와 현재 영화 감상 방식 비교</p>
+<h2 class="doc-h2">🎵 주제 2: 음악 감상</h2>
+<p class="doc-bold">① 묘사(Description): 자주 듣는 음악 / 아티스트 묘사</p>
+<p class="doc-italic">💡 구체적인 아티스트 이름, 앨범 이름 언급 → 풍부한 Content 점수에 도움됩니다.</p>
+<p class="doc-bold">② 습관(Habit): 음악 듣는 루틴</p>
+<h2 class="doc-h2">🏃 주제 3: 운동 (걷기/헬스)</h2>
+<p class="doc-bold">① 습관(Habit): 주로 하는 운동 루틴</p>
+<p class="doc-italic">💡 'It gives me a sense of accomplishment', 'a kind of mental reset' — IH는 단순 사실이 아니라 이런 통찰 표현이 핵심!</p>
+<p class="doc-bold">② 과거경험(Past Experience): 기억에 남는 운동 경험</p>
+<h2 class="doc-h2">✈️ 주제 4: 여행</h2>
+<p class="doc-bold">① 묘사(Description): 좋아하는 여행지 묘사</p>
+<p class="doc-bold">② 비교(Comparison): 국내 여행 vs 해외 여행</p>
+<h1 class="doc-h1">PART 5. 롤플레이 (Role Play) 완전 공략</h1>
+<p class="doc-p">롤플레이는 11~13번에 출제되며, IH를 결정짓는 핵심 파트입니다. 3가지 만능 패턴을 익혀두세요.</p>
+<h2 class="doc-h2">5-1. 롤플레이 3콤보 구조</h2>
+<h2 class="doc-h2">5-2. 실전 롤플레이 스크립트 — 영화관 예매 취소</h2>
+<p class="doc-bold">11번 — 영화관에 전화해 예매 관련 질문하기</p>
+<p class="doc-italic">💡 질문 3개 이상 필수! 'Um', 'Oh, and one more thing' 같은 필러로 자연스럽게 연결하세요.</p>
+<p class="doc-bold">12번 — 예약한 영화를 못 가게 되어 취소 요청</p>
+<p class="doc-italic">💡 감정 표현 필수! 'I'm sorry', 'unfortunately', 'completely out of my control' — 상황에 맞는 감정을 실어야 IH.</p>
+<p class="doc-bold">13번 — 환불이 불가할 때 대안 제시</p>
+<p class="doc-italic">💡 대안 2~3개를 명확히 제시! 'For instance', 'Or, if that's not possible' 같은 연결어가 Text Type 점수를 올려줍니다.</p>
+<h1 class="doc-h1">PART 6. 돌발주제 (Unexpected Topics) 대비</h1>
+<p class="doc-p">돌발주제는 서베이와 관계없이 나오는 공통 질문입니다. 미리 패턴을 익혀두면 전혀 무섭지 않습니다.</p>
+<h2 class="doc-h2">돌발주제 예시: 인터넷/기술 사용</h2>
+<p class="doc-italic">💡 돌발주제 핵심: 당황하지 말고 'Hmm, that's interesting...' 필러로 시간 벌고, 아는 내용으로 자연스럽게 연결!</p>
+<h1 class="doc-h1">PART 7. 시험 전 최종 체크리스트</h1>
+<h2 class="doc-h2">D-7: 일주일 전</h2>
+<li class="doc-li">서베이 주제 4개 각 1분 30초 이상 말할 수 있는지 확인</li>
+<li class="doc-li">롤플레이 3콤보 구조 숙지 완료</li>
+<li class="doc-li">필러 표현 5개 이상 자연스럽게 나오는지 확인</li>
+<li class="doc-li">돌발주제 5개 이상 흐름 잡아두기</li>
+<h2 class="doc-h2">D-1: 하루 전</h2>
+<li class="doc-li">서베이 주제 가볍게 복습 (암기 아닌 흐름 확인)</li>
+<li class="doc-li">롤플레이 만능 문장 소리내어 읽기</li>
+<li class="doc-li">너무 긴 공부 금지 — 목소리 컨디션 유지가 더 중요</li>
+<li class="doc-li">일찍 취침 — 발화 유창성은 컨디션과 직결</li>
+<h2 class="doc-h2">D-day: 시험 당일</h2>
+<li class="doc-li">입실 10분 전까지 도착 (규정 신분증 지참 필수)</li>
+<li class="doc-li">난이도 5~6 선택 확인</li>
+<li class="doc-li">1번 자기소개는 채점 안 됨 — 워밍업으로 자신감 충전</li>
+<li class="doc-li">실수해도 멈추지 않고 계속 이어서 말하기</li>
+<li class="doc-li">침묵 3초 이상 금지 — 막히면 'Let me think...' 바로 사용</li>
+<li class="doc-li">롤플레이에서 감정 표현 풍부하게</li>
+<p class="doc-bold">You've got this! IH는 충분히 달성 가능합니다 💪</p>
+<p class="doc-p">완벽한 문법보다 자연스러운 흐름과 풍부한 감정 표현이 핵심입니다.</p>
+<div class="doc-tables-section"><h2 class="doc-h2">📊 표 & 스크립트 상세</h2><div class="doc-table-wrap"><table class="doc-table">
+<tr>
+<th>IM 수준 (지금)</th>
+<th>IH 수준 (목표)</th>
+</tr>
+<tr>
+<td>익숙한 주제만 문장으로 말함</td>
+<td>낯선 주제도 논리적으로 전개</td>
+</tr>
+<tr>
+<td>단순 나열 위주 답변</td>
+<td>이유·예시·감정 포함한 확장 답변</td>
+</tr>
+<tr>
+<td>롤플레이에서 요구사항만 말함</td>
+<td>감정·필러·추가 반응까지 자연스럽게</td>
+</tr>
+<tr>
+<td>한 가지 시제 위주</td>
+<td>과거/현재/비교 시제 자유롭게 혼용</td>
+</tr>
+</table></div>
+<div class="doc-table-wrap"><table class="doc-table">
+<tr>
+<th>✅ 시험 당일 설정 체크리스트</th>
+</tr>
+<tr>
+<td>• 난이도: 반드시 5~6 선택 (IH/AL 목표 시 필수)</td>
+</tr>
+<tr>
+<td>• 서베이: 영화/드라마, 음악, 운동, 여행 — 잘 말할 수 있는 것 위주로 선택</td>
+</tr>
+<tr>
+<td>• 중간 난이도 조정: '비슷한 질문' 유지 권장 (갑자기 낮추면 IH 불가)</td>
+</tr>
+<tr>
+<td>• 1번 자기소개: 채점 제외 — 워밍업으로 활용, 2분 30초 이내</td>
+</tr>
+<tr>
+<td>• 각 문제 최소 1분~2분 이상 답변 (너무 짧으면 Text Type 점수 낮아짐)</td>
+</tr>
+</table></div>
+<div class="doc-table-wrap"><table class="doc-table">
+<tr>
+<th>기간</th>
+<th>학습 목표</th>
+<th>일일 활동 (30~60분)</th>
+</tr>
+<tr>
+<td>1~2주차</td>
+<td>IH 구조 이해 + 서베이 주제 답변 틀 잡기</td>
+<td>① 이 문서 정독 ② 서베이 4주제 키워드 정리 ③ 각 주제 1분 답변 녹음 연습</td>
+</tr>
+<tr>
+<td>3~4주차</td>
+<td>6가지 문제 유형별 답변 패턴 훈련</td>
+<td>① 묘사/습관/비교/경험 유형 각 1개씩 ② 스크립트 흐름 숙지 ③ 필러 자연스럽게 넣기 연습</td>
+</tr>
+<tr>
+<td>5~6주차</td>
+<td>롤플레이 + 돌발주제 집중 대비</td>
+<td>① 롤플레이 3콤보 패턴 연습 ② 돌발주제 5개 이상 ③ ChatGPT/클로드로 즉흥 대화 연습</td>
+</tr>
+<tr>
+<td>7주차</td>
+<td>시간 내 전체 모의고사 연습</td>
+<td>① 40분 타이머 맞추고 전체 15문제 ② 녹음 후 자기 평가 ③ 약한 유형 보강</td>
+</tr>
+<tr>
+<td>8주차</td>
+<td>마무리 + 실전 시험</td>
+<td>① 서베이 주제 최종 정리 ② 롤플레이 만능 문장 재확인 ③ 시험 당일 컨디션 관리</td>
+</tr>
+</table></div>
+<div class="doc-table-wrap"><table class="doc-table">
+<tr>
+<th>📅 일일 학습 루틴 (30분)</th>
+</tr>
+<tr>
+<td>1. 워밍업 (5분): 어제 연습한 주제 빠르게 말해보기</td>
+</tr>
+<tr>
+<td>2. 새 유형 연습 (15분): 오늘의 스크립트 흐름 익히고 실제로 말하기</td>
+</tr>
+<tr>
+<td>3. 필러 연습 (5분): Well... / Let me think... / Actually... 자연스럽게</td>
+</tr>
+<tr>
+<td>4. 녹음 자기평가 (5분): 멈춤이 너무 없는지, 단조롭지 않은지 체크</td>
+</tr>
+</table></div>
+<div class="doc-table-wrap"><table class="doc-table">
+<tr>
+<th>단계</th>
+<th>역할</th>
+<th>예시 문장</th>
+</tr>
+<tr>
+<td>서론 (1~2문장)</td>
+<td>주제를 바로 제시</td>
+<td>"I'd like to talk about... / When it comes to..., I usually..."</td>
+</tr>
+<tr>
+<td>본론 (3~5문장)</td>
+<td>이유, 예시, 감정, 세부 묘사 포함</td>
+<td>"The reason I love it is... / For example... / I remember once..."</td>
+</tr>
+<tr>
+<td>결론 (1~2문장)</td>
+<td>요약 + 감정 마무리</td>
+<td>"Overall, I think... / That's why it means so much to me."</td>
+</tr>
+</table></div>
+<div class="doc-table-wrap"><table class="doc-table">
+<tr>
+<th>자연스러운 필러 — 침묵 대신 이걸 쓰세요</th>
+</tr>
+<tr>
+<td>• Well, let me think about that... (생각할 시간 벌기)</td>
+</tr>
+<tr>
+<td>• Actually, now that I think about it... (자연스러운 전환)</td>
+</tr>
+<tr>
+<td>• Hmm, that's a good question... (돌발 질문 대응)</td>
+</tr>
+<tr>
+<td>• You know, I've always felt that... (의견 말하기 전)</td>
+</tr>
+<tr>
+<td>• I mean, to be honest... (솔직한 감정 표현)</td>
+</tr>
+<tr>
+<td>• Oh, and another thing I should mention... (추가 내용 연결)</td>
+</tr>
+</table></div>
+<div class="doc-table-wrap"><table class="doc-table">
+<tr>
+<th>Q</th>
+<th>Tell me about a movie theater you often go to. Describe it in detail.</th>
+</tr>
+</table></div>
+<div class="doc-table-wrap"><table class="doc-table">
+<tr>
+<th>서론</th>
+<th>Well, there's a CGV theater near my place that I go to pretty often. It's in a big shopping mall, so it's really convenient to get to.</th>
+</tr>
+</table></div>
+<div class="doc-table-wrap"><table class="doc-table">
+<tr>
+<th>본론</th>
+<th>The theater itself is quite modern and comfortable. The seats are wide and recline slightly, which I really appreciate for long movies. They have a huge screen — I think it's one of the biggest in the area — and the sound system is just incredible. You can really feel the bass during action scenes. What I also love is that the lobby always smells like fresh popcorn, which just gets me in the mood for a movie. Oh, and they have this really cozy cafe area where you can grab a coffee before the film.</th>
+</tr>
+</table></div>
+<div class="doc-table-wrap"><table class="doc-table">
+<tr>
+<th>결론</th>
+<th>Overall, it's one of my favorite spots to unwind after a long week. That's why I keep going back there!</th>
+</tr>
+</table></div>
+<div class="doc-table-wrap"><table class="doc-table">
+<tr>
+<th>Q</th>
+<th>Tell me about a memorable movie you watched. What made it special?</th>
+</tr>
+</table></div>
+<div class="doc-table-wrap"><table class="doc-table">
+<tr>
+<th>서론</th>
+<th>Oh, one movie that really stuck with me was Parasite — the Korean film by Bong Joon-ho. I watched it a few years ago and honestly, I was blown away.</th>
+</tr>
+</table></div>
+<div class="doc-table-wrap"><table class="doc-table">
+<tr>
+<th>본론</th>
+<th>I remember watching it with my friends at a theater downtown. We all thought it was going to be a simple thriller, but as the story unfolded, it became so much more. The way it showed the gap between rich and poor felt really realistic and unsettling at the same time. There was this one particular scene — I don't want to spoil it — but my jaw just dropped. Everyone in the theater gasped. After the movie, we talked about it for like two hours over dinner because we couldn't stop analyzing it.</th>
+</tr>
+</table></div>
+<div class="doc-table-wrap"><table class="doc-table">
+<tr>
+<th>결론</th>
+<th>I think what made it so special was how it made me think about things I'd never considered before. It wasn't just entertainment — it was thought-provoking. That's the kind of movie I truly love.</th>
+</tr>
+</table></div>
+<div class="doc-table-wrap"><table class="doc-table">
+<tr>
+<th>Q</th>
+<th>How has the way people watch movies changed over the years?</th>
+</tr>
+</table></div>
+<div class="doc-table-wrap"><table class="doc-table">
+<tr>
+<th>서론</th>
+<th>That's a really interesting question. The way we watch movies has changed dramatically over the past decade or so.</th>
+</tr>
+</table></div>
+<div class="doc-table-wrap"><table class="doc-table">
+<tr>
+<th>본론</th>
+<th>Back in the day, going to the movie theater was the main — actually, pretty much the only — way to watch new movies. People would dress up a little, buy popcorn, and make a whole event out of it. But now, with streaming platforms like Netflix, Disney Plus, or Watcha, you can watch almost any movie from your couch in your pajamas. The convenience is unbeatable. That said, I think something special gets lost when you watch at home. The big screen, the shared reaction of the audience, the atmosphere — you just can't recreate that. I personally still prefer going to the theater for blockbusters, but I use streaming for everything else.</th>
+</tr>
+</table></div>
+<div class="doc-table-wrap"><table class="doc-table">
+<tr>
+<th>결론</th>
+<th>So I think both options have their place, but streaming has definitely made movies more accessible to everyone. It's a big shift.</th>
+</tr>
+</table></div>
+<div class="doc-table-wrap"><table class="doc-table">
+<tr>
+<th>Q</th>
+<th>Tell me about your favorite type of music or a musician you enjoy.</th>
+</tr>
+</table></div>
+<div class="doc-table-wrap"><table class="doc-table">
+<tr>
+<th>서론</th>
+<th>Well, I'm really into K-pop and also indie music. But if I had to pick one artist I listen to the most, I'd say IU — she's a Korean singer-songwriter.</th>
+</tr>
+</table></div>
+<div class="doc-table-wrap"><table class="doc-table">
+<tr>
+<th>본론</th>
+<th>What I love about IU is how versatile she is. She has this incredibly soft, clear voice that just feels really calming. But she also writes a lot of her own songs, and the lyrics are really poetic and meaningful. I usually listen to her when I'm commuting or just before bed — her music has this soothing quality that helps me wind down. One album in particular, called Lilac, was just stunning from start to finish. I remember listening to it for the first time on a rainy afternoon and just feeling completely at peace.</th>
+</tr>
+</table></div>
+<div class="doc-table-wrap"><table class="doc-table">
+<tr>
+<th>결론</th>
+<th>I think what separates great music from just okay music is whether it makes you feel something, and IU's music always does that for me.</th>
+</tr>
+</table></div>
+<div class="doc-table-wrap"><table class="doc-table">
+<tr>
+<th>Q</th>
+<th>When and how do you usually listen to music? Describe your routine.</th>
+</tr>
+</table></div>
+<div class="doc-table-wrap"><table class="doc-table">
+<tr>
+<th>서론</th>
+<th>Music is honestly a big part of my daily routine. I'd say I listen to it for at least an hour or two every day.</th>
+</tr>
+</table></div>
+<div class="doc-table-wrap"><table class="doc-table">
+<tr>
+<th>본론</th>
+<th>In the morning, I usually put on something upbeat to wake myself up — usually pop or electronic music. It really helps me get energized for the day. Then during my commute, I switch to something a bit more chill, like acoustic or indie. I use earphones and it kind of creates this little personal bubble where I can just zone out. On weekends, if I'm cleaning or cooking, I'll play music out loud from my speaker. I also have different playlists for different moods — one for when I'm happy, one for when I'm feeling a bit down, and one for when I need to focus. Oh, and I discovered most of my favorite artists just by going down recommendation rabbit holes on Spotify.</th>
+</tr>
+</table></div>
+<div class="doc-table-wrap"><table class="doc-table">
+<tr>
+<th>결론</th>
+<th>So yeah, music is kind of like a mood regulator for me. I honestly don't know what my day would feel like without it.</th>
+</tr>
+</table></div>
+<div class="doc-table-wrap"><table class="doc-table">
+<tr>
+<th>Q</th>
+<th>Tell me about the type of exercise you do. How often do you exercise and what's your routine?</th>
+</tr>
+</table></div>
+<div class="doc-table-wrap"><table class="doc-table">
+<tr>
+<th>서론</th>
+<th>I try to stay pretty active. My main forms of exercise are walking and going to the gym, and I try to do something every day if possible.</th>
+</tr>
+</table></div>
+<div class="doc-table-wrap"><table class="doc-table">
+<tr>
+<th>본론</th>
+<th>On weekdays, I usually go for a walk in the evening after work. There's a park near my apartment, and I walk for about 30 to 40 minutes. I find it really helpful for clearing my head after a stressful day. The fresh air just does something for my mood that I can't get from sitting inside. On weekends, I go to the gym. I focus mostly on cardio and some light weight training. I've been going to the same gym for about a year now, and I've started to see some real changes in my stamina and energy levels. What I like most is that it gives me a sense of accomplishment — even on days when nothing else goes right, I can at least say I worked out.</th>
+</tr>
+</table></div>
+<div class="doc-table-wrap"><table class="doc-table">
+<tr>
+<th>결론</th>
+<th>So exercise is really more than just physical for me. It's become a kind of mental reset too. I'd definitely recommend it to anyone feeling stressed.</th>
+</tr>
+</table></div>
+<div class="doc-table-wrap"><table class="doc-table">
+<tr>
+<th>Q</th>
+<th>Describe a memorable experience you had while exercising.</th>
+</tr>
+</table></div>
+<div class="doc-table-wrap"><table class="doc-table">
+<tr>
+<th>서론</th>
+<th>Actually, there's one experience that stands out quite clearly in my mind. It was about six months ago, and I pushed myself to walk a really long trail for the first time.</th>
+</tr>
+</table></div>
+<div class="doc-table-wrap"><table class="doc-table">
+<tr>
+<th>본론</th>
+<th>I decided to walk the full Bukhansan trail with a friend of mine. We had been talking about doing it for ages but kept putting it off. So one Saturday, we just decided to go for it. It was way harder than I expected — my legs were burning after the first hour. But about halfway through, we reached this viewpoint with this stunning panoramic view of the city, and I just stopped and took it all in. I remember thinking, 'Okay, this was so worth it.' We took tons of photos and ate our packed lunches up there. By the end, we were completely exhausted, but we felt so proud of ourselves.</th>
+</tr>
+</table></div>
+<div class="doc-table-wrap"><table class="doc-table">
+<tr>
+<th>결론</th>
+<th>That experience kind of changed my perspective on exercise. It made me realize that the best workouts are the ones that also give you a great story to tell. I'd love to do it again.</th>
+</tr>
+</table></div>
+<div class="doc-table-wrap"><table class="doc-table">
+<tr>
+<th>Q</th>
+<th>Tell me about a place you like to travel to. Describe it in detail.</th>
+</tr>
+</table></div>
+<div class="doc-table-wrap"><table class="doc-table">
+<tr>
+<th>서론</th>
+<th>One place I always love going back to is Jeju Island. It's a small island off the southern coast of Korea, and it's just absolutely beautiful.</th>
+</tr>
+</table></div>
+<div class="doc-table-wrap"><table class="doc-table">
+<tr>
+<th>본론</th>
+<th>What makes Jeju so special is the variety it offers. You've got these dramatic volcanic landscapes — like Hallasan Mountain and the lava tube caves — but also these gorgeous beaches with crystal clear water. The food there is also incredible. I always make sure to have fresh seafood and the local black pork barbecue. The air feels cleaner there too, which sounds simple but honestly makes such a difference. Last time I visited, I rented a scooter and just drove along the coastline for a whole day, stopping wherever looked interesting. There's this feeling of freedom you get there that's hard to describe.</th>
+</tr>
+</table></div>
+<div class="doc-table-wrap"><table class="doc-table">
+<tr>
+<th>결론</th>
+<th>I think Jeju is one of those places that just recharges you completely. No matter how stressed I am before I go, I always come back feeling refreshed and grateful. I'd recommend it to anyone.</th>
+</tr>
+</table></div>
+<div class="doc-table-wrap"><table class="doc-table">
+<tr>
+<th>Q</th>
+<th>What do you think are the differences between traveling domestically and internationally?</th>
+</tr>
+</table></div>
+<div class="doc-table-wrap"><table class="doc-table">
+<tr>
+<th>서론</th>
+<th>That's something I think about a lot actually, because I enjoy both kinds of travel but for very different reasons.</th>
+</tr>
+</table></div>
+<div class="doc-table-wrap"><table class="doc-table">
+<tr>
+<th>본론</th>
+<th>Domestic travel is really convenient. You don't need to worry about language barriers, currency exchange, or long flights. If I want a quick getaway, somewhere like Jeju or Gyeongju is perfect. I can plan it last minute and still have a great time. International travel, on the other hand, is a completely different kind of experience. There's a sense of real adventure when you step off a plane in a foreign country and everything is unfamiliar — the signs, the smells, the food. It pushes you out of your comfort zone in a way that domestic travel usually doesn't. I went to Japan a couple of years ago, and navigating a completely different city and culture was both challenging and incredibly exciting.</th>
+</tr>
+</table></div>
+<div class="doc-table-wrap"><table class="doc-table">
+<tr>
+<th>결론</th>
+<th>So I'd say domestic travel is great for relaxation, while international travel is more about growth and discovery. Ideally, I'd do both every year.</th>
+</tr>
+</table></div>
+<div class="doc-table-wrap"><table class="doc-table">
+<tr>
+<th>롤플레이 3콤보 패턴</th>
+</tr>
+<tr>
+<td>11번: 정보 요청 / 질문하기 (3개 이상 질문)</td>
+</tr>
+<tr>
+<td>12번: 문제 상황 발생 + 해결 요청</td>
+</tr>
+<tr>
+<td>13번: 대안 제시 / 해결책 설명</td>
+</tr>
+</table></div>
+<div class="doc-table-wrap"><table class="doc-table">
+<tr>
+<th>Q</th>
+<th>Pretend you want to book movie tickets. Call the theater and ask 3 or more questions.</th>
+</tr>
+</table></div>
+<div class="doc-table-wrap"><table class="doc-table">
+<tr>
+<th>Script</th>
+<th>Hello! I'd like to get some information about booking tickets. Um, first of all, what movies are currently showing this weekend? And are there any shows available in the evening — maybe around 7 or 8 PM? Also, I wanted to ask — do you offer any discounts? Like for students or membership cards? Oh, and one more thing — can I book tickets online, or do I have to come in person? That would really help me plan ahead. Thank you so much!</th>
+</tr>
+</table></div>
+<div class="doc-table-wrap"><table class="doc-table">
+<tr>
+<th>Q</th>
+<th>You have a problem. You can't go to the movie you booked. Call and explain the situation.</th>
+</tr>
+</table></div>
+<div class="doc-table-wrap"><table class="doc-table">
+<tr>
+<th>Script</th>
+<th>Hi, I'm sorry to bother you, but I have a bit of a problem. I booked two tickets for the 7 PM showing of [movie title] this Saturday, but unfortunately something came up and I won't be able to make it. I had a family emergency, so it was completely out of my control. I was wondering if it would be possible to cancel the reservation and get a refund? I do have my booking confirmation number if you need it. I'm really sorry for the inconvenience and I hope this isn't too much trouble.</th>
+</tr>
+</table></div>
+<div class="doc-table-wrap"><table class="doc-table">
+<tr>
+<th>Q</th>
+<th>The theater says they can't give a refund. Offer 2-3 alternatives.</th>
+</tr>
+</table></div>
+<div class="doc-table-wrap"><table class="doc-table">
+<tr>
+<th>Script</th>
+<th>Oh, I see. That's a bit disappointing, but I understand the policy. In that case, could we perhaps explore some other options? For instance, would it be possible to change the date instead of cancelling? Maybe we could move the booking to next weekend? Or, if that's not possible, could I transfer the tickets to a friend? They might be available to use them. And if neither of those work, would you at least be able to give me a credit or voucher for future use? I'd really appreciate any flexibility you can offer. Thank you for your patience.</th>
+</tr>
+</table></div>
+<div class="doc-table-wrap"><table class="doc-table">
+<tr>
+<th>자주 나오는 돌발주제 TOP 5</th>
+</tr>
+<tr>
+<td>1. 인터넷/기술 사용 습관 — Tell me about how you use the internet in your daily life.</td>
+</tr>
+<tr>
+<td>2. 재활용/환경 — How do people recycle in your country? Has it changed?</td>
+</tr>
+<tr>
+<td>3. 공원/야외 장소 — Describe a park you like to visit.</td>
+</tr>
+<tr>
+<td>4. 은행/금융 — Tell me about banking services in your country.</td>
+</tr>
+<tr>
+<td>5. 교통 — How do people get around in your city? Describe the transportation.</td>
+</tr>
+</table></div>
+<div class="doc-table-wrap"><table class="doc-table">
+<tr>
+<th>Q</th>
+<th>Tell me about how you use the internet in your daily life.</th>
+</tr>
+</table></div>
+<div class="doc-table-wrap"><table class="doc-table">
+<tr>
+<th>서론</th>
+<th>Honestly, the internet is just a part of my daily routine at this point. I use it constantly — probably more than I should, actually!</th>
+</tr>
+</table></div>
+<div class="doc-table-wrap"><table class="doc-table">
+<tr>
+<th>본론</th>
+<th>In the morning, I check my emails and news apps to catch up on what happened overnight. During the day, I use it for work — doing research, joining video calls, sending documents. But in my personal time, I use it mostly for entertainment and staying connected. I stream music and shows, scroll through social media, and chat with friends. One thing I've noticed is that my screen time has gone up a lot over the past few years. It's convenient, but sometimes I feel like it's a bit too much. I've actually started trying to have phone-free evenings a few times a week just to decompress.</th>
+</tr>
+</table></div>
+<div class="doc-table-wrap"><table class="doc-table">
+<tr>
+<th>결론</th>
+<th>So the internet is incredibly useful and I genuinely couldn't imagine my life without it, but I do think it's important to be mindful about how much time we spend on it. Balance is key.</th>
+</tr>
+</table></div></div>`
+  },
+  extra: {
+    title: '💬 돌발주제 + 숙어/동사',
+    html: `<p class="doc-bold">OPIc IH 보충 자료</p>
+<p class="doc-p">돌발주제 10개 + 필수 숙어/동사 완전 정복</p>
+<h1 class="doc-h1">PART 1. 돌발주제 (Unexpected Topics) 스크립트 10개</h1>
+<p class="doc-bold">돌발주제는 서베이 선택과 관계없이 공통으로 출제됩니다. 아래 10개 주제 흐름을 익혀두면 어떤 돌발이 나와도 2~3문장으로 시작할 수 있습니다.</p>
+<h2 class="doc-h2">① 인터넷 / 기술</h2>
+<p class="doc-highlight">Q: Tell me about how you use the internet or technology in your daily life.</p>
+<p class="doc-italic">💡 돌발 대응 필러: 'Hmm, that's actually a great topic...' 으로 1~2초 확보 후 시작!</p>
+<h2 class="doc-h2">② 재활용 / 환경</h2>
+<p class="doc-highlight">Q: Tell me about recycling in your country. How has it changed over the years?</p>
+<h2 class="doc-h2">③ 공원 / 야외 장소</h2>
+<p class="doc-highlight">Q: Tell me about a park or outdoor place you like to visit. Describe it in detail.</p>
+<h2 class="doc-h2">④ 은행 / 금융</h2>
+<p class="doc-highlight">Q: Tell me about how people use banks in your country. How have banking services changed?</p>
+<h2 class="doc-h2">⑤ 교통</h2>
+<p class="doc-highlight">Q: How do people get around in your city? Describe the transportation system.</p>
+<h2 class="doc-h2">⑥ 건강 / 의료</h2>
+<p class="doc-highlight">Q: Tell me about the healthcare system in your country. How do people take care of their health?</p>
+<h2 class="doc-h2">⑦ 날씨 / 계절</h2>
+<p class="doc-highlight">Q: Describe the seasons in your country. Which season do you prefer and why?</p>
+<h2 class="doc-h2">⑧ 음식 / 외식 문화</h2>
+<p class="doc-highlight">Q: Tell me about the food culture in your country or how people eat out.</p>
+<h2 class="doc-h2">⑨ 쇼핑</h2>
+<p class="doc-highlight">Q: Tell me about how people shop in your country. How has shopping changed?</p>
+<h2 class="doc-h2">⑩ 직장 / 일하는 문화</h2>
+<p class="doc-highlight">Q: Tell me about work culture in your country. Has it changed in recent years?</p>
+<h1 class="doc-h1">PART 2. OPIc IH 필수 숙어 (Idioms &amp; Expressions)</h1>
+<p class="doc-p">아래 숙어들은 IH 답변에서 자연스럽게 쓰면 Content/Accuracy 점수를 올려주는 표현들입니다. 한 번에 다 외우려 하지 말고, 주제별로 2~3개씩 연습하세요.</p>
+<h2 class="doc-h2">2-1. 감정/경험 표현 (가장 많이 씀)</h2>
+<h2 class="doc-h2">2-2. 비교/대조 표현</h2>
+<h2 class="doc-h2">2-3. 이유/설명 표현</h2>
+<h2 class="doc-h2">2-4. 시간/변화 표현</h2>
+<h2 class="doc-h2">2-5. 롤플레이 필수 표현</h2>
+<h1 class="doc-h1">PART 3. OPIc IH 필수 동사 &amp; 동사구</h1>
+<p class="doc-p">단순한 동사(like, go, do) 대신 이 동사들을 쓰면 어휘 다양성 점수가 올라갑니다. 각 동사 옆 예문을 소리내어 읽으며 익히세요.</p>
+<h2 class="doc-h2">3-1. 감정/반응 동사</h2>
+<h2 class="doc-h2">3-2. 묘사/설명 동사</h2>
+<h2 class="doc-h2">3-3. 변화/과정 동사</h2>
+<h2 class="doc-h2">3-4. 일상/루틴 동사구</h2>
+<h2 class="doc-h2">3-5. IH 고급 연결 동사/표현</h2>
+<p class="doc-bold">하루에 한 파트씩, 소리내어 읽는 것만으로도 충분합니다 💪</p>
+<p class="doc-p">암기보다 '입에 붙이기' — 예문을 3번씩 말해보세요.</p>
+<div class="doc-tables-section"><h2 class="doc-h2">📊 표 & 스크립트 상세</h2><div class="doc-table-wrap"><table class="doc-table">
+<tr>
+<th>서론</th>
+<th>The internet is honestly a huge part of my daily life at this point. I use it from the moment I wake up until I go to sleep.</th>
+</tr>
+<tr>
+<td>본론</td>
+<td>In the morning, I check news apps and emails to catch up on what happened overnight. During the day, I use it for work — research, video calls, file sharing. In my personal time, it's mostly streaming music or shows, staying in touch with friends via KakaoTalk, and scrolling through social media. One thing I've started to notice is that my screen time has gone up quite a bit over the years. It's convenient, but sometimes I feel like it's a bit excessive. I've actually been trying to have phone-free evenings a couple times a week just to decompress.</td>
+</tr>
+<tr>
+<td>결론</td>
+<td>So the internet is absolutely essential to me, but I do think balance is important. Being intentional about screen time is something more people need to think about.</td>
+</tr>
+</table></div>
+<div class="doc-table-wrap"><table class="doc-table">
+<tr>
+<th>서론</th>
+<th>Korea actually has one of the most thorough recycling systems in the world, and it's something I've grown up with, so it feels very natural to me.</th>
+</tr>
+<tr>
+<td>본론</td>
+<td>We have a color-coded bin system — separate bins for paper, plastic, glass, food waste, and general trash. Food waste recycling in particular is strictly enforced and you even have to pay for special bags to dispose of it. Growing up, I remember my parents being really strict about sorting garbage properly. Back then it felt like a chore, but now I genuinely believe it's important. Over the years, I've noticed that awareness has grown a lot among younger generations. People are bringing their own cups to cafes, refusing plastic bags, and buying second-hand goods more than before.</td>
+</tr>
+<tr>
+<td>결론</td>
+<td>I think Korea has made real progress, but there's still a lot more we can do, especially when it comes to reducing single-use plastics at the source rather than just recycling them after.</td>
+</tr>
+</table></div>
+<div class="doc-table-wrap"><table class="doc-table">
+<tr>
+<th>서론</th>
+<th>There's a river park near where I live that I go to pretty regularly — Hangang Park. It's one of my favorite spots in the city.</th>
+</tr>
+<tr>
+<td>본론</td>
+<td>What I love about it is how spacious it is. You've got wide open grass fields where people are having picnics, cycling paths that stretch for kilometers, and a beautiful view of the river with the city skyline behind it. In the evenings especially, the atmosphere is just magical — the lights reflecting off the water, people jogging or just sitting and chatting. I usually go there when I need to clear my head. There's something about being near water and open space that just makes everything feel less stressful. During weekends it gets crowded, so I prefer going on weekday evenings.</td>
+</tr>
+<tr>
+<td>결론</td>
+<td>Honestly, it's one of those places that reminds me why I love living in Seoul. A huge city but you can still find these pockets of calm.</td>
+</tr>
+</table></div>
+<div class="doc-table-wrap"><table class="doc-table">
+<tr>
+<th>서론</th>
+<th>Banking in Korea has changed dramatically over the past decade or so, mainly due to the rise of mobile banking apps.</th>
+</tr>
+<tr>
+<td>본론</td>
+<td>When I was younger, my parents would physically go to a bank branch to transfer money, pay bills, or check their balance. It was a whole process — waiting in line, filling out forms, the works. Now, almost everything is done through apps on your phone. I personally use my bank's app for nearly everything — transfers, bill payments, even applying for loans. There are also internet-only banks like Kakao Bank and Toss Bank that don't have physical branches at all, and they've become incredibly popular, especially among younger people, because they're simpler and often offer better rates. The only time I actually go to a physical bank now is for things like getting official documents certified.</td>
+</tr>
+<tr>
+<td>결론</td>
+<td>It's a massive shift and honestly a very convenient one. Though I do sometimes worry about older generations who might struggle with the digital-only trend.</td>
+</tr>
+</table></div>
+<div class="doc-table-wrap"><table class="doc-table">
+<tr>
+<th>서론</th>
+<th>Seoul has one of the best public transportation systems I've ever seen. Most people rely on subways and buses to get around, and it's really efficient.</th>
+</tr>
+<tr>
+<td>본론</td>
+<td>The subway network covers pretty much the entire city and even extends to surrounding areas. It's clean, punctual, and very affordable — you can get almost anywhere for under 2,000 won. Buses complement the subway well, reaching areas that the subway doesn't. Most people use a T-money card or just tap their phone to pay, which is super convenient. Taxis are also widely available, and apps like Kakao Taxi have made it even easier to hail one. Personally, I use the subway most of the time because it's predictable — I always know exactly how long it'll take. During rush hour, though, it gets incredibly packed, which is the one downside.</td>
+</tr>
+<tr>
+<td>결론</td>
+<td>Overall, Seoul's public transport is something I genuinely appreciate. It's one of the things that makes city life very livable here.</td>
+</tr>
+</table></div>
+<div class="doc-table-wrap"><table class="doc-table">
+<tr>
+<th>서론</th>
+<th>Korea has a national health insurance system, which means most people have access to affordable medical care. It's something I think we're quite fortunate to have.</th>
+</tr>
+<tr>
+<td>본론</td>
+<td>Most people visit local clinics for minor issues — things like colds, checkups, or minor injuries. The costs are quite low thanks to insurance coverage. For more serious conditions, there are large general hospitals, though waiting times can be long. Personally, I try to take a preventative approach to health. I get an annual health checkup, try to exercise regularly, and watch what I eat. I've noticed that health consciousness has really grown among my generation — more people are interested in mental health too, which wasn't really talked about openly a few years ago.</td>
+</tr>
+<tr>
+<td>결론</td>
+<td>I think Korea's healthcare system is strong in terms of physical care, but there's still work to be done around mental health support and work-life balance, which affects people's wellbeing a lot.</td>
+</tr>
+</table></div>
+<div class="doc-table-wrap"><table class="doc-table">
+<tr>
+<th>서론</th>
+<th>Korea has four very distinct seasons, and each one has its own character. Honestly, it's one of the things I love about living here.</th>
+</tr>
+<tr>
+<td>본론</td>
+<td>Spring is beautiful — the cherry blossoms come out in April and the whole city turns pink for about two weeks. Everyone goes outside for picnics and it feels really festive. Summer is hot and humid, with a rainy monsoon season in July. It can be quite exhausting, but I love the long evenings. Autumn is probably my favorite — the leaves turn red and gold, the air is crisp, and the temperatures are perfect. Winter gets cold and snowy, which I actually enjoy because everything looks so clean and the Christmas atmosphere is lovely. Personally, I prefer autumn because the weather is just right — not too hot, not too cold — and the scenery is stunning.</td>
+</tr>
+<tr>
+<td>결론</td>
+<td>Each season gives you something different to look forward to, which makes the year feel dynamic. I can't imagine living somewhere with just one or two seasons.</td>
+</tr>
+</table></div>
+<div class="doc-table-wrap"><table class="doc-table">
+<tr>
+<th>서론</th>
+<th>Food is a really central part of Korean culture. We eat out a lot, and there's just an incredible variety of options everywhere you go.</th>
+</tr>
+<tr>
+<td>본론</td>
+<td>Korean food is known for being bold and flavorful — lots of fermented foods like kimchi, spicy dishes, and grilled meats. Eating out here is very social; it's rarely something you do alone. Most restaurants are designed for groups, with dishes shared in the middle of the table. What I love is how affordable eating out can be — you can get a full, delicious meal for around 8,000 to 10,000 won at most local restaurants. Delivery culture is also huge here. Apps like Baemin and Coupang Eats mean you can get virtually any food delivered to your door within 30 minutes. I probably order delivery two or three times a week, especially when I'm busy or tired.</td>
+</tr>
+<tr>
+<td>결론</td>
+<td>Food is really a way of connecting with people here. A meal is never just about eating — it's about catching up, celebrating, or just spending time together.</td>
+</tr>
+</table></div>
+<div class="doc-table-wrap"><table class="doc-table">
+<tr>
+<th>서론</th>
+<th>Shopping habits in Korea have shifted massively in recent years, mostly driven by the rise of online shopping platforms.</th>
+</tr>
+<tr>
+<td>본론</td>
+<td>When I was younger, weekend shopping trips to department stores or markets were a family event. People would browse, try things on, and make a day of it. Now, most of my shopping happens online — Coupang, SSG, or Naver Shopping. You can order almost anything and get it delivered the next day, or even the same night with dawn delivery. That said, I still enjoy physical shopping for certain things. Clothes especially — I like to try things on before buying. And there's still something enjoyable about wandering around a market or a trendy street in Hongdae or Insadong. But for everyday items, online is just so much more convenient.</td>
+</tr>
+<tr>
+<td>결론</td>
+<td>I think both exist side by side now. Online wins on convenience, but offline wins on experience. The best retailers are the ones who've figured out how to offer both.</td>
+</tr>
+</table></div>
+<div class="doc-table-wrap"><table class="doc-table">
+<tr>
+<th>서론</th>
+<th>Work culture in Korea has traditionally been quite intense — long hours, hierarchical structures, and a strong emphasis on loyalty to the company. But things have been changing, especially since the pandemic.</th>
+</tr>
+<tr>
+<td>본론</td>
+<td>The older generation often had a mentality of staying late just to show dedication, even if the actual work was done. That's something younger workers are really pushing back against now. There's been a big shift toward work-life balance, flexible hours, and remote work. A lot of companies introduced work-from-home during COVID and many have kept hybrid models. I think younger Koreans especially are placing much more value on personal time, hobbies, and mental health than previous generations did. The term 'work-life balance' gets talked about constantly now, which wouldn't have been the case ten years ago.</td>
+</tr>
+<tr>
+<td>결론</td>
+<td>I think we're in a genuine transition period. The old culture of overwork is fading, but it's a slow process. Personally, I believe productivity and wellbeing go hand in hand, and I hope more companies start to truly embrace that.</td>
+</tr>
+</table></div>
+<div class="doc-table-wrap"><table class="doc-table">
+<tr>
+<th>숙어</th>
+<th>의미</th>
+<th>예문</th>
+</tr>
+<tr>
+<td>I was blown away</td>
+<td>완전히 압도됐다 / 놀랐다</td>
+<td>I was blown away by the scenery.</td>
+</tr>
+<tr>
+<td>It really stuck with me</td>
+<td>오래 기억에 남다</td>
+<td>That movie really stuck with me.</td>
+</tr>
+<tr>
+<td>I can't imagine ~ without</td>
+<td>~없이는 상상도 못 하다</td>
+<td>I can't imagine my life without music.</td>
+</tr>
+<tr>
+<td>It means a lot to me</td>
+<td>나에게 큰 의미가 있다</td>
+<td>This place means a lot to me.</td>
+</tr>
+<tr>
+<td>I was completely hooked</td>
+<td>완전히 빠져들었다</td>
+<td>I was completely hooked on the series.</td>
+</tr>
+<tr>
+<td>It hit me that...</td>
+<td>~라는 것을 깨달았다</td>
+<td>It hit me that time goes by so fast.</td>
+</tr>
+<tr>
+<td>I find it ~ (adj/V-ing)</td>
+<td>나는 그것이 ~하다고 느낀다</td>
+<td>I find it really relaxing.</td>
+</tr>
+<tr>
+<td>It takes my mind off things</td>
+<td>머리를 식혀주다</td>
+<td>Exercise really takes my mind off things.</td>
+</tr>
+</table></div>
+<div class="doc-table-wrap"><table class="doc-table">
+<tr>
+<th>숙어</th>
+<th>의미</th>
+<th>예문</th>
+</tr>
+<tr>
+<td>On the other hand</td>
+<td>반면에</td>
+<td>On the other hand, online shopping is faster.</td>
+</tr>
+<tr>
+<td>Compared to before</td>
+<td>이전과 비교해서</td>
+<td>Compared to before, things have changed a lot.</td>
+</tr>
+<tr>
+<td>Back in the day</td>
+<td>예전에는</td>
+<td>Back in the day, we had to go in person.</td>
+</tr>
+<tr>
+<td>That said,</td>
+<td>그렇다고 해도</td>
+<td>That said, I still prefer going to theaters.</td>
+</tr>
+<tr>
+<td>In contrast,</td>
+<td>대조적으로</td>
+<td>In contrast, younger people prefer apps.</td>
+</tr>
+<tr>
+<td>What sets ~ apart is</td>
+<td>~를 특별하게 만드는 건</td>
+<td>What sets Jeju apart is its volcanic landscape.</td>
+</tr>
+<tr>
+<td>The biggest difference is</td>
+<td>가장 큰 차이는</td>
+<td>The biggest difference is the convenience.</td>
+</tr>
+<tr>
+<td>Whereas ~ , ~</td>
+<td>~인 반면, ~하다</td>
+<td>Whereas cities are busy, rural areas are peaceful.</td>
+</tr>
+</table></div>
+<div class="doc-table-wrap"><table class="doc-table">
+<tr>
+<th>숙어</th>
+<th>의미</th>
+<th>예문</th>
+</tr>
+<tr>
+<td>The reason I ~ is</td>
+<td>내가 ~하는 이유는</td>
+<td>The reason I love it is the atmosphere.</td>
+</tr>
+<tr>
+<td>What I love most is</td>
+<td>내가 가장 좋아하는 건</td>
+<td>What I love most is how peaceful it is.</td>
+</tr>
+<tr>
+<td>That's why ~</td>
+<td>그래서 ~하다</td>
+<td>That's why I keep going back.</td>
+</tr>
+<tr>
+<td>It's partly because</td>
+<td>부분적으로는 ~ 때문에</td>
+<td>It's partly because of the convenience.</td>
+</tr>
+<tr>
+<td>I think what makes it special is</td>
+<td>특별한 이유는</td>
+<td>I think what makes it special is the people.</td>
+</tr>
+<tr>
+<td>The key thing is</td>
+<td>핵심은</td>
+<td>The key thing is consistency.</td>
+</tr>
+<tr>
+<td>It goes without saying that</td>
+<td>말할 것도 없이</td>
+<td>It goes without saying that health is important.</td>
+</tr>
+<tr>
+<td>To be honest,</td>
+<td>솔직히 말하면</td>
+<td>To be honest, I was a bit nervous at first.</td>
+</tr>
+</table></div>
+<div class="doc-table-wrap"><table class="doc-table">
+<tr>
+<th>숙어</th>
+<th>의미</th>
+<th>예문</th>
+</tr>
+<tr>
+<td>Over the years</td>
+<td>수년에 걸쳐</td>
+<td>Over the years, things have changed dramatically.</td>
+</tr>
+<tr>
+<td>Ever since then</td>
+<td>그 이후로 줄곧</td>
+<td>Ever since then, I've been hooked.</td>
+</tr>
+<tr>
+<td>At the time</td>
+<td>그 당시에</td>
+<td>At the time, I had no idea how good it would be.</td>
+</tr>
+<tr>
+<td>These days</td>
+<td>요즘에는</td>
+<td>These days, most people shop online.</td>
+</tr>
+<tr>
+<td>Used to</td>
+<td>예전에는 ~했다</td>
+<td>I used to go every week.</td>
+</tr>
+<tr>
+<td>Has shifted significantly</td>
+<td>크게 변화했다</td>
+<td>Work culture has shifted significantly.</td>
+</tr>
+<tr>
+<td>All of a sudden</td>
+<td>갑자기</td>
+<td>All of a sudden, everything made sense.</td>
+</tr>
+<tr>
+<td>Eventually</td>
+<td>결국에는</td>
+<td>Eventually, I got used to it.</td>
+</tr>
+</table></div>
+<div class="doc-table-wrap"><table class="doc-table">
+<tr>
+<th>숙어</th>
+<th>의미</th>
+<th>예문</th>
+</tr>
+<tr>
+<td>Something came up</td>
+<td>갑자기 일이 생겼다</td>
+<td>I'm sorry, something came up unexpectedly.</td>
+</tr>
+<tr>
+<td>I was wondering if...</td>
+<td>~가 가능한지 여쭤보고 싶었어요</td>
+<td>I was wondering if I could change the date.</td>
+</tr>
+<tr>
+<td>Would it be possible to</td>
+<td>~하는 게 가능할까요?</td>
+<td>Would it be possible to get a refund?</td>
+</tr>
+<tr>
+<td>I completely understand</td>
+<td>충분히 이해합니다</td>
+<td>I completely understand the policy.</td>
+</tr>
+<tr>
+<td>In that case,</td>
+<td>그렇다면</td>
+<td>In that case, could we try another option?</td>
+</tr>
+<tr>
+<td>I'd really appreciate it if</td>
+<td>~해 주신다면 정말 감사하겠습니다</td>
+<td>I'd really appreciate it if you could help.</td>
+</tr>
+<tr>
+<td>Is there any way to</td>
+<td>~할 방법이 있을까요?</td>
+<td>Is there any way to make an exception?</td>
+</tr>
+<tr>
+<td>As an alternative,</td>
+<td>대안으로</td>
+<td>As an alternative, could I reschedule?</td>
+</tr>
+</table></div>
+<div class="doc-table-wrap"><table class="doc-table">
+<tr>
+<th>동사</th>
+<th>의미</th>
+<th>예문</th>
+</tr>
+<tr>
+<td>appreciate</td>
+<td>고마워하다 / 진가를 알다</td>
+<td>I really appreciate how convenient it is.</td>
+</tr>
+<tr>
+<td>cherish</td>
+<td>소중히 여기다</td>
+<td>I cherish those memories with my family.</td>
+</tr>
+<tr>
+<td>admire</td>
+<td>감탄하다 / 존경하다</td>
+<td>I really admire her dedication to music.</td>
+</tr>
+<tr>
+<td>fascinate</td>
+<td>매료시키다</td>
+<td>The city always fascinates me.</td>
+</tr>
+<tr>
+<td>overwhelm</td>
+<td>압도하다</td>
+<td>The view completely overwhelmed me.</td>
+</tr>
+<tr>
+<td>inspire</td>
+<td>영감을 주다</td>
+<td>Her story really inspired me to try harder.</td>
+</tr>
+<tr>
+<td>motivate</td>
+<td>동기를 부여하다</td>
+<td>Working out really motivates me for the day.</td>
+</tr>
+<tr>
+<td>unwind</td>
+<td>긴장을 풀다</td>
+<td>I like to unwind by watching dramas.</td>
+</tr>
+</table></div>
+<div class="doc-table-wrap"><table class="doc-table">
+<tr>
+<th>동사</th>
+<th>의미</th>
+<th>예문</th>
+</tr>
+<tr>
+<td>feature</td>
+<td>~을 갖추고 있다</td>
+<td>The park features wide cycling paths.</td>
+</tr>
+<tr>
+<td>overlook</td>
+<td>내려다보다 / 면하다</td>
+<td>The cafe overlooks the river.</td>
+</tr>
+<tr>
+<td>surround</td>
+<td>둘러싸다</td>
+<td>The area is surrounded by mountains.</td>
+</tr>
+<tr>
+<td>stretch</td>
+<td>뻗어있다</td>
+<td>The trail stretches for about 10 kilometers.</td>
+</tr>
+<tr>
+<td>consist of</td>
+<td>~로 구성되다</td>
+<td>The meal consists of several small dishes.</td>
+</tr>
+<tr>
+<td>reflect</td>
+<td>반영하다 / 비추다</td>
+<td>The lights reflect off the water beautifully.</td>
+</tr>
+<tr>
+<td>range from ~ to ~</td>
+<td>~에서 ~까지 다양하다</td>
+<td>Prices range from cheap to very expensive.</td>
+</tr>
+<tr>
+<td>vary</td>
+<td>다양하다 / 다르다</td>
+<td>The quality varies a lot depending on the place.</td>
+</tr>
+</table></div>
+<div class="doc-table-wrap"><table class="doc-table">
+<tr>
+<th>동사</th>
+<th>의미</th>
+<th>예문</th>
+</tr>
+<tr>
+<td>shift</td>
+<td>이동하다 / 변화하다</td>
+<td>My perspective has shifted a lot.</td>
+</tr>
+<tr>
+<td>evolve</td>
+<td>발전하다 / 진화하다</td>
+<td>The technology has evolved rapidly.</td>
+</tr>
+<tr>
+<td>transform</td>
+<td>변화시키다</td>
+<td>The app transformed the way I exercise.</td>
+</tr>
+<tr>
+<td>replace</td>
+<td>대체하다</td>
+<td>Streaming has replaced physical media.</td>
+</tr>
+<tr>
+<td>adopt</td>
+<td>채택하다 / 받아들이다</td>
+<td>More companies are adopting flexible work.</td>
+</tr>
+<tr>
+<td>emerge</td>
+<td>등장하다</td>
+<td>New trends have emerged in recent years.</td>
+</tr>
+<tr>
+<td>fade</td>
+<td>사라지다 / 희미해지다</td>
+<td>The old work culture is slowly fading.</td>
+</tr>
+<tr>
+<td>expand</td>
+<td>확장되다</td>
+<td>The service has expanded nationwide.</td>
+</tr>
+</table></div>
+<div class="doc-table-wrap"><table class="doc-table">
+<tr>
+<th>동사구</th>
+<th>의미</th>
+<th>예문</th>
+</tr>
+<tr>
+<td>tend to</td>
+<td>~하는 경향이 있다</td>
+<td>I tend to exercise in the evenings.</td>
+</tr>
+<tr>
+<td>end up ~ing</td>
+<td>결국 ~하게 되다</td>
+<td>I always end up staying longer than planned.</td>
+</tr>
+<tr>
+<td>keep up with</td>
+<td>~을 따라가다 / 유지하다</td>
+<td>It's hard to keep up with all the new apps.</td>
+</tr>
+<tr>
+<td>look forward to</td>
+<td>~을 기대하다</td>
+<td>I always look forward to the weekend.</td>
+</tr>
+<tr>
+<td>cut down on</td>
+<td>~을 줄이다</td>
+<td>I'm trying to cut down on screen time.</td>
+</tr>
+<tr>
+<td>catch up on</td>
+<td>밀린 것을 따라잡다</td>
+<td>I use commute time to catch up on news.</td>
+</tr>
+<tr>
+<td>get used to</td>
+<td>~에 익숙해지다</td>
+<td>I've gotten used to waking up early.</td>
+</tr>
+<tr>
+<td>make the most of</td>
+<td>최대한 활용하다</td>
+<td>I try to make the most of my free time.</td>
+</tr>
+</table></div>
+<div class="doc-table-wrap"><table class="doc-table">
+<tr>
+<th>표현</th>
+<th>의미</th>
+<th>예문</th>
+</tr>
+<tr>
+<td>reflect on</td>
+<td>돌아보다 / 성찰하다</td>
+<td>It made me reflect on my own habits.</td>
+</tr>
+<tr>
+<td>come to realize</td>
+<td>점차 깨닫게 되다</td>
+<td>I came to realize how important it is.</td>
+</tr>
+<tr>
+<td>resonate with</td>
+<td>공감되다 / 울림을 주다</td>
+<td>Her music really resonates with me.</td>
+</tr>
+<tr>
+<td>stand out</td>
+<td>두드러지다 / 특별하다</td>
+<td>That experience really stands out in my mind.</td>
+</tr>
+<tr>
+<td>put ~ into perspective</td>
+<td>올바른 시각으로 보게 하다</td>
+<td>Traveling really puts things into perspective.</td>
+</tr>
+<tr>
+<td>make a difference</td>
+<td>변화를 만들다 / 중요하다</td>
+<td>Even small habits can make a big difference.</td>
+</tr>
+<tr>
+<td>goes hand in hand with</td>
+<td>~와 함께 간다</td>
+<td>Productivity goes hand in hand with wellbeing.</td>
+</tr>
+<tr>
+<td>broaden one's horizons</td>
+<td>시야를 넓히다</td>
+<td>Travel really broadens your horizons.</td>
+</tr>
+</table></div></div>`
+  }
+};
+
+// ═══ APP URLS (relative — same folder on GitHub Pages) ═══
+const APPS = {
+  roleplay: { title: '🎭 롤플레이 연습', src: 'opic_roleplay_pwa.html' },
+  audio:    { title: '🎧 오디오북', src: 'opic_audiobook_v6.html' }
+};
+
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+
+function goHome() {
+  // Stop iframe audio if any
+  const iframe = document.getElementById('appIframe');
+  iframe.src = '';
+  showScreen('screen-home');
+}
+
+function openDoc(key) {
+  const doc = DOCS[key];
+  document.getElementById('docNavTitle').textContent = doc.title;
+  const scroll = document.getElementById('docScroll');
+  scroll.innerHTML = doc.html;
+  scroll.scrollTop = 0;
+  
+  // Build TOC from h1/h2
+  const toc = document.getElementById('docToc');
+  toc.innerHTML = '';
+  scroll.querySelectorAll('.doc-h1,.doc-h2').forEach((el, i) => {
+    el.id = 'doc-anchor-' + i;
+    const btn = document.createElement('button');
+    btn.className = 'toc-btn';
+    btn.textContent = el.textContent.slice(0, 20) + (el.textContent.length > 20 ? '…' : '');
+    btn.onclick = () => el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    toc.appendChild(btn);
+  });
+  
+  showScreen('screen-doc');
+}
+
+function openApp(key) {
+  const app = APPS[key];
+  document.getElementById('appNavTitle').textContent = app.title;
+  document.getElementById('appIframe').src = app.src;
+  showScreen('screen-app');
+}
+</script>
+</body>
+</html>
